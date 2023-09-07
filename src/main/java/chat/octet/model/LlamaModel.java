@@ -108,14 +108,15 @@ public class LlamaModel implements AutoCloseable {
         Preconditions.checkNotNull(sampleParams, "Sample parameter cannot be null");
 
         Generator generator = new Generator(text, sampleParams);
-
-        StringBuilder builder = new StringBuilder();
         while (generator.hasNext()) {
-            Token token = generator.next();
-            builder.append(token.getText());
+            generator.next();
         }
-        resetModelStatus();
-        return builder.toString();
+        if (modelParams.isVerbose()) {
+            llama.llama_print_timings(context.getLlamaContext());
+            llama.llama_reset_timings(context.getLlamaContext());
+        }
+        context.reset();
+        return generator.getFullGenerateText();
     }
 
     public Iterable<Token> generate(String text, SampleParameter sampleParams) {
@@ -133,10 +134,11 @@ public class LlamaModel implements AutoCloseable {
             @Override
             public void forEach(Consumer<? super Token> action) {
                 Iterable.super.forEach(action);
+
                 if (modelParams.isVerbose()) {
                     llama.llama_print_timings(context.getLlamaContext());
+                    llama.llama_reset_timings(context.getLlamaContext());
                 }
-                resetModelStatus();
             }
         };
     }
@@ -145,12 +147,16 @@ public class LlamaModel implements AutoCloseable {
         Preconditions.checkNotNull(text, "Text cannot be null");
         Preconditions.checkArgument(modelParams.isEmbedding(), "Llama model must be created with embedding=True to call this method");
 
-        resetModelStatus();
         int[] tokens = tokenize(new String(text.getBytes(StandardCharsets.UTF_8)), true);
+        //
         evaluate(tokens);
         FloatByReference reference = llama.llama_get_embeddings(context.getLlamaContext());
         float[] embedding = reference.getPointer().getFloatArray(0, context.getEmbeddingSize());
-        resetModelStatus();
+        if (modelParams.isVerbose()) {
+            llama.llama_print_timings(context.getLlamaContext());
+            llama.llama_reset_timings(context.getLlamaContext());
+        }
+        context.reset();
         return embedding;
     }
 
@@ -166,19 +172,6 @@ public class LlamaModel implements AutoCloseable {
         byte[] buffer = new byte[64];
         int size = llama.llama_token_to_piece(context.getLlamaContext(), token, buffer, buffer.length);
         return new String(buffer, 0, size, StandardCharsets.UTF_8);
-    }
-
-    public void resetModelStatus() {
-        resetTimings();
-        context.reset();
-    }
-
-    protected void resetTimings() {
-        Preconditions.checkNotNull(context, "Model context cannot be null");
-
-        if (modelParams != null && modelParams.isVerbose()) {
-            llama.llama_reset_timings(context.getLlamaContext());
-        }
     }
 
     protected void evaluate(int[] tokens) {
@@ -282,6 +275,7 @@ public class LlamaModel implements AutoCloseable {
 
     @Override
     public void close() {
+        context.reset();
         llama.llama_free(context.getLlamaContext());
         llama.llama_free_model(model);
     }
@@ -347,6 +341,11 @@ public class LlamaModel implements AutoCloseable {
             return token;
         }
 
+        public String getFullGenerateText() {
+            StringBuilder builder = new StringBuilder();
+            generateTokens.forEach(token -> builder.append(token.getText()));
+            return builder.toString();
+        }
     }
 
 }

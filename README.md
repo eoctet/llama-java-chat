@@ -16,7 +16,10 @@ public class Example {
                 .verbose(true)
                 .build();
 
-        String text = "[INST] <<SYS>>\nAnswer the questions.<</SYS>>\n\nWho are you? [/INST] ";
+        String text = PromptBuilder.toPrompt(
+                "Answer the questions.",
+                "Who are you?"
+        );
 
         SampleParameter sampleParams = SampleParameter.builder().build();
 
