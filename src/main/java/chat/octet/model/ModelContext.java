@@ -6,6 +6,7 @@ import chat.octet.model.parameters.ModelParameter;
 import com.sun.jna.Pointer;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -75,10 +76,6 @@ public final class ModelContext {
         this.nativeLastTokensSize = new NativeSize(lastTokensSize);
     }
 
-    public IntBuffer toInputBuffer() {
-        return IntBuffer.wrap(inputBuffer);
-    }
-
     public int getInputLength() {
         return inputLength.get();
     }
@@ -135,6 +132,17 @@ public final class ModelContext {
         float nlLogit = logits[tokenNL];
         LlamaLibrary.llama_token_data tokenData = (LlamaLibrary.llama_token_data) candidates.data.toArray(vocabSize)[tokenNL];
         tokenData.logit = nlLogit;
+    }
+
+    public void truncate(int keepSize) {
+        if (keepSize <= 0 || keepSize >= contextSize) {
+            keepSize = contextSize / 2;
+        }
+        int[] newTokensBuffer = ArrayUtils.subarray(inputBuffer, keepSize, inputBuffer.length);
+        Arrays.fill(inputBuffer, 0);
+        System.arraycopy(newTokensBuffer, 0, inputBuffer, 0, newTokensBuffer.length);
+        pastTokensSize.set(keepSize);
+        inputLength.set(keepSize);
     }
 
     public void reset() {

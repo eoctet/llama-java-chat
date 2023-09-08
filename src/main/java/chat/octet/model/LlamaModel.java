@@ -161,11 +161,12 @@ public class LlamaModel implements AutoCloseable {
     }
 
     public int[] tokenize(String text, boolean addBos) {
-        int nextTokens = llama.llama_tokenize_with_model(model, text, context.toInputBuffer(), context.getContextSize(), addBos ? (byte) 1 : 0);
+        IntBuffer tokens = IntBuffer.allocate(context.getContextSize());
+        int nextTokens = llama.llama_tokenize_with_model(model, text, tokens, context.getContextSize(), addBos ? (byte) 1 : 0);
         if (nextTokens < 0) {
             throw new RuntimeException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
-        return ArrayUtils.subarray(context.getInputBuffer(), 0, nextTokens);
+        return ArrayUtils.subarray(tokens.array(), 0, nextTokens);
     }
 
     public String decodeToken(int token) {
@@ -296,12 +297,23 @@ public class LlamaModel implements AutoCloseable {
             this.sampleParams = sampleParams;
 
             int[] tokens = StringUtils.isNotBlank(text) ? tokenize(text, true) : new int[]{context.getTokenBOS()};
+            if (tokens.length >= context.getContextSize()) {
+                throw new IllegalArgumentException(String.format("Requested tokens (%s) exceed context window of %s", tokens.length, context.getContextSize()));
+            }
+            if (sampleParams.isVerbosePrompt()) {
+                System.out.println(text);
+            }
+            if (context.getInputLength() + tokens.length > context.getContextSize()) {
+                context.truncate(sampleParams.getKeepContextTokensSize());
+            }
+            int index = Math.max(context.getInputLength(), 0);
+            System.arraycopy(tokens, 0, context.getInputBuffer(), index, tokens.length);
             context.incrementInputLength(tokens.length);
 
-            if (tokens.length >= context.getContextSize()) {
-                throw new IllegalArgumentException(String.format("Requested tokens (%s) exceed context window of %s}", tokens.length, context.getContextSize()));
-            }
             int maxNewTokensSize = (sampleParams.getMaxNewTokensSize() <= 0) ? context.getContextSize() - tokens.length : sampleParams.getMaxNewTokensSize();
+            if (maxNewTokensSize + tokens.length > context.getContextSize()) {
+                maxNewTokensSize = context.getContextSize() - tokens.length;
+            }
             context.setMaxNewTokensSize(maxNewTokensSize);
 
             generateTokens = Lists.newArrayList();
@@ -320,6 +332,9 @@ public class LlamaModel implements AutoCloseable {
             Token token = sample(sampleParams);
             //Save new token to the list
             generateTokens.add(token);
+            if (context.getInputLength() + 1 > context.getContextSize()) {
+                context.truncate(sampleParams.getKeepContextTokensSize());
+            }
             context.appendToInputBuffer(token.getId());
             //
             if (token.getId() == context.getTokenEOS()) {

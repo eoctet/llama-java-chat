@@ -14,22 +14,6 @@ public class PromptBuilder {
     private static final String INST_END_SUFFIX = " [/INST] ";
     private static final String SYS_BEGIN_SUFFIX = "<<SYS>>\n";
     private static final String SYS_END_SUFFIX = "\n<</SYS>>\n\n";
-    private static final String BOS = "<s>";
-    private static final String EOS = "</s>";
-
-    public static String toPrompt(String prompt, String answer, String system, String question) {
-        if (StringUtils.isAnyBlank(prompt, answer, system, question)) {
-            throw new IllegalArgumentException("prompt parameter cannot be empty");
-        }
-        return StringUtils.join(prompt, answer, "\n", BOS, toPrompt(system, question));
-    }
-
-    public static String toPrompt(String prompt, String answer, String question) {
-        if (StringUtils.isAnyBlank(prompt, answer, question)) {
-            throw new IllegalArgumentException("prompt parameter cannot be empty");
-        }
-        return StringUtils.join(prompt, answer, "\n", BOS, toPrompt(question));
-    }
 
     public static String toPrompt(String system, String question) {
         if (StringUtils.isAnyBlank(system, question)) {

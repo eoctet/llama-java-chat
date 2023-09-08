@@ -137,6 +137,13 @@ public final class SampleParameter {
     private boolean verbosePrompt = false;
 
     /**
+     * <b>keep tokens size</b><br/>
+     * Number of tokens to keep from the context.
+     */
+    @Builder.Default
+    private int keepContextTokensSize = 1024;
+
+    /**
      * Mirostat sampling mode define
      */
     public enum MirostatMode {
