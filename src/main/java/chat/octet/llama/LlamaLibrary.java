@@ -19,7 +19,7 @@ import java.util.List;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public interface LlamaLibrary extends Library {
-    String JNA_LIBRARY_NAME = "libllama.dylib";
+    String JNA_LIBRARY_NAME = "llama";
     NativeLibrary JNA_NATIVE_LIB = NativeLibrary.getInstance(LlamaLibrary.JNA_LIBRARY_NAME);
     LlamaLibrary INSTANCE = Native.load(LlamaLibrary.JNA_LIBRARY_NAME, LlamaLibrary.class);
 
