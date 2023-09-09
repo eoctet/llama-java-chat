@@ -1,9 +1,15 @@
-# Java bindings for llama.cpp
+package chat.octet.test;
 
-This is a Java bindings for **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp) library.
+import chat.octet.model.LlamaModel;
+import chat.octet.model.parameters.ModelParameter;
+import chat.octet.model.parameters.SampleParameter;
+import chat.octet.utils.PromptBuilder;
+import org.apache.commons.lang3.StringUtils;
 
-## Example
-```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 public class ConsoleQA {
 
     private static final String MODEL_PATH = "/llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf";
@@ -37,13 +43,3 @@ public class ConsoleQA {
         }
     }
 }
-```
-
-
-## Dependencies
-- `Java 8`
-- [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
-
-## About
-- This is a project for learning purposes. 📚
-- If you like, you can always expand based on this project !
