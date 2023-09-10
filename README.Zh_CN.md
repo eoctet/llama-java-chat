@@ -1,19 +1,19 @@
 # Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 
-[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md)
+[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) 
 
-Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggerganov/llama.cpp), this project has the same functionality as other language versions.
+这是一个基于 🦙[`llama.cpp`](https://github.com/ggerganov/llama.cpp)  C API进行开发的Java版本，本项目和其他语言版本具有一样的功能。
 
-#### Main content
-- 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
-- 🚀 Supported:
-  - [X] OpenAPI (some sampling parameters have been adjusted to Llama2)
-  - [X] Cloud deployment
-  - [X] CLI interaction
+#### 主要功能
+- 🚀 基于 Llama.cpp 构建，支持GGUF模型，更多细节请关注 **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
+- 🚀 支持:
+  - [X] OpenAPI （部分采样参数已按照Llama2进行调整）
+  - [X] 服务部署
+  - [X] 命令行交互
 
 
-### Usages
-
+### 使用示例
+ 
 #### ConsoleQA
 
 ```java
@@ -54,15 +54,15 @@ public class ConsoleQA {
 
 #### Open API
 
-- **`COMPLETIONS`**
+- **`COMPLETIONS`** 
 
 ```bash
 curl --location 'http://SERVER:PORT/v1/completions' \
 --header 'Content-Type: application/json' \
 --data '{
     "stream": true,
-    "input": "Who are you",
-    "prompt": "<YOUR PROMPTS>"
+    "input": "你是谁",
+    "prompt": "<提示词>"
 }'
 ```
 
@@ -76,20 +76,20 @@ curl --location 'http://SERVER:PORT/v1/chat/completions' \
     "messages": [
         {
             "role": "USER",
-            "content": "Who are you"
+            "content": "你是谁？"
         }
     ]
 }'
 ```
 
-> [!ATTENTIONS]
->
-> This project does not include language model. Please obtain the required model files yourself.
+> [!注意事项]
 > 
-> Some features are being optimized and updated.
+> 本项目不包含语言模型，请自行获取所需的模型文件。 
+> 
+> 部分功能还在优化完善，随时更新中。
 
-### Feedback
-- If you have any questions, please submit them in GitHub Issue.
+### 问题反馈
+- 如果你有任何疑问，欢迎在GitHub Issue中提交。
 
 ---
 
