@@ -1,10 +1,10 @@
-# Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
+# ☕️ Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 
 [**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) 
 
 这是一个基于 🦙[`llama.cpp`](https://github.com/ggerganov/llama.cpp)  C API进行开发的Java版本，本项目和其他语言版本具有一样的功能。
 
-----
+---
 
 #### 主要功能
 - 🚀 基于 Llama.cpp 构建，支持GGUF模型，更多细节请关注 **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
@@ -98,6 +98,6 @@ curl --location 'http://SERVER:PORT/v1/chat/completions' \
 
 - 如果你有任何疑问，欢迎在GitHub Issue中提交。
 
-----
+---
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)

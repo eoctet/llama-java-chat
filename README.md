@@ -1,10 +1,10 @@
-# Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
+# ☕️ Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 
 [**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md)
 
 Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggerganov/llama.cpp), this project has the same functionality as other language versions.
 
-----
+---
 
 #### Main content
 - 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
@@ -98,6 +98,6 @@ curl --location 'http://SERVER:PORT/v1/chat/completions' \
 
 - If you have any questions, please submit them in GitHub Issue.
 
-----
+---
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
