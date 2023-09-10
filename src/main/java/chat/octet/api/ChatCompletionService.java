@@ -5,7 +5,10 @@ import chat.octet.api.model.ChatCompletionData;
 import chat.octet.api.model.ChatCompletionRequestParameter;
 import chat.octet.api.model.ChatMessage;
 import chat.octet.model.LlamaModel;
+import chat.octet.model.UserContext;
+import chat.octet.model.UserContextManager;
 import chat.octet.model.beans.FinishReason;
+import chat.octet.model.beans.Token;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.model.parameters.SampleParameter;
 import chat.octet.utils.CommonUtils;
@@ -34,16 +37,15 @@ public class ChatCompletionService implements AutoCloseable {
     private final static SampleParameter DEFAULT_PARAMETER = SampleParameter.builder().build();
 
     @Value("${model.name}")
-    private String modeName;
+    private String modelName;
 
-    private static final String MODEL_PATH = "/Users/william/development/llm/tools/llama.cpp/zh-models/chinese-alpaca-2-7b/ggml-model-7b-q6_k.gguf";
+    private static final String MODEL_PATH = "/llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf";
 
     private static final ModelParameter modelParams = ModelParameter.builder()
             .modelPath(MODEL_PATH)
             .threads(8)
             .contextSize(4096)
             .verbose(true)
-            .mlock(false)
             .lastNTokensSize(256)
             .build();
 
@@ -54,6 +56,7 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/chat/completions").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
+                    long startTime = System.currentTimeMillis();
                     if (requestParams.getMessages() == null || requestParams.getMessages().isEmpty()) {
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue("Request parameter 'messages' cannot be empty"));
@@ -64,22 +67,36 @@ public class ChatCompletionService implements AutoCloseable {
                             input = message.getContent();
                         }
                     }
-                    String id = CommonUtils.randomString("octetcmp");
+                    String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(input);
                     SampleParameter sampleParams = getSampleParameter(requestParams);
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model.getContextSize(), model.getVocabSize());
 
                     if (!requestParams.isStream()) {
-                        ChatCompletionData data = generateCompletionData(text, sampleParams, true);
-                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
+                        ChatCompletionData data = generateCompletionData(userContext, text, sampleParams, true);
+                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
 
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                                .body(Flux.just(chunk), ChatCompletionChunk.class);
+                                .body(Flux.just(chunk).doOnCancel(() -> {
+                                    log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                    model.printTimings();
+                                }).doOnComplete(() -> {
+                                    log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                    model.printTimings();
+                                }), ChatCompletionChunk.class);
                     }
                     //streaming output
+                    Iterable<Token> tokenIterable = model.generate(userContext, text, sampleParams);
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
-                            .body(Flux.fromIterable(model.generate(text, sampleParams)).map(token -> {
+                            .body(Flux.fromIterable(tokenIterable).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData("content", token.getText(), token.getFinishReason().name());
-                                return new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
+                                return new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
+                            }).doOnCancel(() -> {
+                                log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                model.printTimings();
+                            }).doOnComplete(() -> {
+                                log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                model.printTimings();
                             }), ChatCompletionChunk.class);
                 })
         );
@@ -90,27 +107,42 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/completions").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
+                    long startTime = System.currentTimeMillis();
                     if (StringUtils.isBlank(requestParams.getInput())) {
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue("Request parameter 'input' cannot be empty"));
                     }
-                    String id = CommonUtils.randomString("octetcmp");
+                    String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(requestParams.getPrompt(), requestParams.getInput());
                     SampleParameter sampleParams = getSampleParameter(requestParams);
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model.getContextSize(), model.getVocabSize());
 
                     if (!requestParams.isStream()) {
-                        ChatCompletionData data = generateCompletionData(text, sampleParams, false);
-                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
+                        ChatCompletionData data = generateCompletionData(userContext, text, sampleParams, false);
+                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
 
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                                .body(Flux.just(chunk).doOnComplete(model::reset), ChatCompletionChunk.class);
+                                .body(Flux.just(chunk).doOnCancel(() -> {
+                                    log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                    model.printTimings();
+                                }).doOnComplete(() -> {
+                                    log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                    model.printTimings();
+                                }), ChatCompletionChunk.class);
                     }
                     //streaming output
+                    Iterable<Token> tokenIterable = model.generate(userContext, text, sampleParams);
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
-                            .body(Flux.fromIterable(model.generate(text, sampleParams)).map(token -> {
+                            .body(Flux.fromIterable(tokenIterable).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData(token.getText(), token.getFinishReason().name());
-                                return new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
-                            }).doOnCancel(model::reset).doOnComplete(model::reset), ChatCompletionChunk.class);
+                                return new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
+                            }).doOnCancel(() -> {
+                                log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                model.printTimings();
+                            }).doOnComplete(() -> {
+                                log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                                model.printTimings();
+                            }), ChatCompletionChunk.class);
                 })
         );
     }
@@ -119,10 +151,14 @@ public class ChatCompletionService implements AutoCloseable {
     public RouterFunction<ServerResponse> resetFunction() {
         return RouterFunctions.route(
                 RequestPredicates.GET("/v1/chat/reset").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
-                serverRequest -> {
-                    model.reset();
+                serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
+                    if ("ALL".equalsIgnoreCase(requestParams.getUser())) {
+                        UserContextManager.getInstance().removeAllUsersContext();
+                    } else {
+                        UserContextManager.getInstance().removeUserContext(requestParams.getUser());
+                    }
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue("Success"));
-                }
+                })
         );
     }
 
@@ -142,10 +178,10 @@ public class ChatCompletionService implements AutoCloseable {
                 .build();
     }
 
-    private ChatCompletionData generateCompletionData(String text, SampleParameter sampleParams, boolean chat) {
+    private ChatCompletionData generateCompletionData(UserContext userContext, String text, SampleParameter sampleParams, boolean chat) {
         StringBuilder content = new StringBuilder();
         AtomicReference<FinishReason> finishReason = new AtomicReference<>(FinishReason.NONE);
-        model.generate(text, sampleParams).forEach(token -> {
+        model.generate(userContext, text, sampleParams).forEach(token -> {
             content.append(token.getText());
             finishReason.set(token.getFinishReason());
         });

@@ -8,9 +8,12 @@ import chat.octet.model.beans.FinishReason;
 import chat.octet.model.beans.Token;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.model.parameters.SampleParameter;
+import chat.octet.utils.CommonUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.sun.jna.Pointer;
 import com.sun.jna.ptr.FloatByReference;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Llama model
@@ -37,8 +39,29 @@ public class LlamaModel implements AutoCloseable {
     private final ModelParameter modelParams;
     private final LlamaLibrary llama;
     private final LlamaLibrary.llama_model model;
+    private final LlamaLibrary.llama_context llamaContext;
 
-    private final ModelContext context;
+    //llama context parameters
+    @Getter
+    private final int contextSize;
+    @Getter
+    private final int embeddingSize;
+    @Getter
+    private final int vocabSize;
+    @Getter
+    private final int tokenBOS;
+    @Getter
+    private final int tokenEOS;
+    @Getter
+    private final int tokenNL;
+    @Getter
+    private final int batchSize;
+    @Getter
+    private final Pointer logitsPointer;
+    @Getter
+    private final int lastTokensSize;
+    @Getter
+    private final NativeSize nativeLastTokensSize;
 
     public LlamaModel(ModelParameter modelParams) {
         Preconditions.checkNotNull(modelParams, "Model parameters cannot be null");
@@ -70,13 +93,23 @@ public class LlamaModel implements AutoCloseable {
             }
         }
 
-        this.context = new ModelContext(this.llama, this.model, modelParams);
+        this.llamaContext = llama.llama_new_context_with_model(model, modelParams.getLlamaContextParams());
+        this.contextSize = llama.llama_n_ctx(llamaContext);
+        this.embeddingSize = llama.llama_n_embd(llamaContext);
+        this.vocabSize = llama.llama_n_vocab(llamaContext);
+        this.tokenBOS = llama.llama_token_bos(llamaContext);
+        this.tokenEOS = llama.llama_token_eos(llamaContext);
+        this.tokenNL = llama.llama_token_nl(llamaContext);
+        this.batchSize = modelParams.getBatchSize();
+        this.logitsPointer = llama.llama_get_logits(llamaContext).getPointer();
+        this.lastTokensSize = modelParams.getLastNTokensSize() < 0 ? contextSize : modelParams.getLastNTokensSize();
+        this.nativeLastTokensSize = new NativeSize(lastTokensSize);
 
         if (modelParams.isVerbose()) {
             String systemInfo = llama.llama_print_system_info();
-            log.info("system info: " + systemInfo);
+            log.info(CommonUtils.format("system info: {0}", systemInfo));
         }
-        log.info("model parameters: " + modelParams);
+        log.info(CommonUtils.format("model parameters: {0}", modelParams));
     }
 
     private void settingLlamaContextParameters() {
@@ -108,27 +141,35 @@ public class LlamaModel implements AutoCloseable {
     }
 
     public Iterable<Token> generate(String text, SampleParameter sampleParams) {
+        UserContext userContext = UserContextManager.getInstance().getDefaultUserContext(this);
+        return generate(userContext, text, sampleParams);
+    }
+
+    public Iterable<Token> generate(UserContext userContext, String text, SampleParameter sampleParams) {
+        Preconditions.checkNotNull(userContext, "User context cannot be null");
         Preconditions.checkNotNull(text, "Text cannot be null");
         Preconditions.checkNotNull(sampleParams, "Sample parameter cannot be null");
 
         return new Iterable<Token>() {
 
+            private Generator generator = null;
+
             @Nonnull
             @Override
             public Iterator<Token> iterator() {
-                return new Generator(text, sampleParams);
-            }
-
-            @Override
-            public void forEach(Consumer<? super Token> action) {
-                Iterable.super.forEach(action);
-
-                if (modelParams.isVerbose()) {
-                    llama.llama_print_timings(context.getLlamaContext());
-                    llama.llama_reset_timings(context.getLlamaContext());
+                if (generator == null) {
+                    generator = new Generator(userContext, text, sampleParams);
                 }
+                return generator;
             }
         };
+    }
+
+    public void printTimings() {
+        if (modelParams.isVerbose()) {
+            llama.llama_print_timings(llamaContext);
+            llama.llama_reset_timings(llamaContext);
+        }
     }
 
     public float[] embedding(String text) {
@@ -136,21 +177,24 @@ public class LlamaModel implements AutoCloseable {
         Preconditions.checkArgument(modelParams.isEmbedding(), "Llama model must be created with embedding=True to call this method");
 
         int[] tokens = tokenize(new String(text.getBytes(StandardCharsets.UTF_8)), true);
+        String defaultId = "embedding";
+        UserContext userContext = UserContextManager.getInstance().createUserContext(defaultId, getContextSize(), getVocabSize());
+        System.arraycopy(tokens, 0, userContext.getInputBuffer(), 0, tokens.length);
         //
-        evaluate(tokens);
-        FloatByReference reference = llama.llama_get_embeddings(context.getLlamaContext());
-        float[] embedding = reference.getPointer().getFloatArray(0, context.getEmbeddingSize());
+        evaluate(userContext);
+        FloatByReference reference = llama.llama_get_embeddings(llamaContext);
+        float[] embedding = reference.getPointer().getFloatArray(0, getEmbeddingSize());
         if (modelParams.isVerbose()) {
-            llama.llama_print_timings(context.getLlamaContext());
-            llama.llama_reset_timings(context.getLlamaContext());
+            llama.llama_print_timings(llamaContext);
+            llama.llama_reset_timings(llamaContext);
         }
-        context.reset();
+        UserContextManager.getInstance().removeUserContext(defaultId);
         return embedding;
     }
 
     public int[] tokenize(String text, boolean addBos) {
-        IntBuffer tokens = IntBuffer.allocate(context.getContextSize());
-        int nextTokens = llama.llama_tokenize_with_model(model, text, tokens, context.getContextSize(), addBos ? (byte) 1 : 0);
+        IntBuffer tokens = IntBuffer.allocate(getContextSize());
+        int nextTokens = llama.llama_tokenize_with_model(model, text, tokens, getContextSize(), addBos ? (byte) 1 : 0);
         if (nextTokens < 0) {
             throw new ModelException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
@@ -159,57 +203,59 @@ public class LlamaModel implements AutoCloseable {
 
     public String decodeToken(int token) {
         byte[] buffer = new byte[64];
-        int size = llama.llama_token_to_piece(context.getLlamaContext(), token, buffer, buffer.length);
+        int size = llama.llama_token_to_piece(llamaContext, token, buffer, buffer.length);
         return new String(buffer, 0, size, StandardCharsets.UTF_8);
     }
 
-    public void reset() {
-        context.reset();
-    }
-
-    protected void evaluate(int[] tokens) {
-        while (context.doEvaluation()) {
-            int evaluateSize = context.getEvaluateSize();
-            int endIndex = evaluateSize + context.getPastTokensSize();
+    protected void evaluate(UserContext userContext) {
+        while (userContext.doEvaluation()) {
+            int evaluateSize = userContext.getEvaluationSize();
+            if (evaluateSize > this.batchSize) {
+                evaluateSize = this.batchSize;
+            }
+            int endIndex = evaluateSize + userContext.getPastTokensSize();
             //
-            int[] batchTokens = ArrayUtils.subarray(tokens, context.getPastTokensSize(), endIndex);
-            int returnCode = llama.llama_eval(context.getLlamaContext(), IntBuffer.wrap(batchTokens), evaluateSize, context.getPastTokensSize(), modelParams.getThreads());
+            int[] batchTokens = ArrayUtils.subarray(userContext.getInputBuffer(), userContext.getPastTokensSize(), endIndex);
+            int returnCode = llama.llama_eval(llamaContext, IntBuffer.wrap(batchTokens), evaluateSize, userContext.getPastTokensSize(), modelParams.getThreads());
             if (returnCode != 0) {
                 throw new ModelException("Llama_eval returned " + returnCode);
             }
-            context.addPastTokensSize(evaluateSize);
+            userContext.addPastTokensSize(evaluateSize);
         }
     }
 
-    protected Token sample(SampleParameter sampleParams) {
+    protected Token sample(UserContext userContext, SampleParameter sampleParams) {
         long timestamp = System.currentTimeMillis();
 
         //reset candidates data
-        LlamaLibrary.llama_token_data_array candidates = context.resetCandidatesData();
+        float[] logits = logitsPointer.getFloatArray(0, vocabSize);
+        LlamaLibrary.llama_token_data_array candidates = userContext.resetCandidatesData(logits);
 
         //penalty process
-        int startIndex = Math.max(0, context.getInputLength() - context.getLastTokensSize());
-        int[] lastTokens = ArrayUtils.subarray(context.getInputBuffer(), startIndex, context.getInputLength());
+        int startIndex = Math.max(0, userContext.getInputLength() - getLastTokensSize());
+        int[] lastTokens = ArrayUtils.subarray(userContext.getInputBuffer(), startIndex, userContext.getInputLength());
 
         llama.llama_sample_repetition_penalty(
-                context.getLlamaContext(),
+                llamaContext,
                 candidates,
                 IntBuffer.wrap(lastTokens),
-                context.getNativeLastTokensSize(),
+                getNativeLastTokensSize(),
                 sampleParams.getRepeatPenalty()
         );
 
         llama.llama_sample_frequency_and_presence_penalties(
-                context.getLlamaContext(),
+                llamaContext,
                 candidates,
                 IntBuffer.wrap(lastTokens),
-                context.getNativeLastTokensSize(),
+                getNativeLastTokensSize(),
                 sampleParams.getFrequencyPenalty(),
                 sampleParams.getPresencePenalty()
         );
 
         if (!sampleParams.isPenalizeNl()) {
-            context.processTokenNewline();
+            float nlLogit = logits[getTokenNL()];
+            LlamaLibrary.llama_token_data tokenData = (LlamaLibrary.llama_token_data) candidates.data.toArray(getVocabSize())[getTokenNL()];
+            tokenData.logit = nlLogit;
         }
 
         //TODO implement the llama grammar here
@@ -217,7 +263,7 @@ public class LlamaModel implements AutoCloseable {
 
         int tokenId;
         if (sampleParams.getTemperature() == 0) {
-            tokenId = llama.llama_sample_token_greedy(context.getLlamaContext(), candidates);
+            tokenId = llama.llama_sample_token_greedy(llamaContext, candidates);
         } else {
             float mirostatMu = 2.0f * sampleParams.getMirostatTAU();
             FloatBuffer mu = FloatBuffer.allocate(1);
@@ -226,9 +272,9 @@ public class LlamaModel implements AutoCloseable {
             switch (sampleParams.getMirostatMode()) {
                 case V1:
                     int mirostatM = 100;
-                    llama.llama_sample_temperature(context.getLlamaContext(), candidates, sampleParams.getTemperature());
+                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
                     tokenId = llama.llama_sample_token_mirostat(
-                            context.getLlamaContext(),
+                            llamaContext,
                             candidates,
                             sampleParams.getMirostatTAU(),
                             sampleParams.getMirostatETA(),
@@ -237,9 +283,9 @@ public class LlamaModel implements AutoCloseable {
                     );
                     break;
                 case V2:
-                    llama.llama_sample_temperature(context.getLlamaContext(), candidates, sampleParams.getTemperature());
+                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
                     tokenId = llama.llama_sample_token_mirostat_v2(
-                            context.getLlamaContext(),
+                            llamaContext,
                             candidates,
                             sampleParams.getMirostatTAU(),
                             sampleParams.getMirostatETA(),
@@ -249,13 +295,13 @@ public class LlamaModel implements AutoCloseable {
                 case DISABLED:
                 default:
                     NativeSize minKeep = new NativeSize(1);
-                    int topK = sampleParams.getTopK() <= 0 ? context.getVocabSize() : sampleParams.getTopK();
-                    llama.llama_sample_top_k(context.getLlamaContext(), candidates, topK, minKeep);
-                    llama.llama_sample_tail_free(context.getLlamaContext(), candidates, sampleParams.getTsf(), minKeep);
-                    llama.llama_sample_typical(context.getLlamaContext(), candidates, 1.0f, minKeep);
-                    llama.llama_sample_top_p(context.getLlamaContext(), candidates, sampleParams.getTopP(), minKeep);
-                    llama.llama_sample_temperature(context.getLlamaContext(), candidates, sampleParams.getTemperature());
-                    tokenId = llama.llama_sample_token(context.getLlamaContext(), candidates);
+                    int topK = sampleParams.getTopK() <= 0 ? getVocabSize() : sampleParams.getTopK();
+                    llama.llama_sample_top_k(llamaContext, candidates, topK, minKeep);
+                    llama.llama_sample_tail_free(llamaContext, candidates, sampleParams.getTsf(), minKeep);
+                    llama.llama_sample_typical(llamaContext, candidates, 1.0f, minKeep);
+                    llama.llama_sample_top_p(llamaContext, candidates, sampleParams.getTopP(), minKeep);
+                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
+                    tokenId = llama.llama_sample_token(llamaContext, candidates);
                     break;
             }
         }
@@ -263,13 +309,13 @@ public class LlamaModel implements AutoCloseable {
         //TODO implement the llama grammar here
         //TODO like: void llama_grammar_accept_token(llama_context ctx, llama_grammar grammar, int token);
 
-        return new Token(tokenId, context.getTokenLogProbability(tokenId), timestamp, decodeToken(tokenId));
+        return new Token(tokenId, userContext.getTokenLogProbability(tokenId), timestamp, decodeToken(tokenId));
     }
+
 
     @Override
     public void close() {
-        context.reset();
-        llama.llama_free(context.getLlamaContext());
+        llama.llama_free(llamaContext);
         llama.llama_free_model(model);
     }
 
@@ -284,31 +330,39 @@ public class LlamaModel implements AutoCloseable {
         private final SampleParameter sampleParams;
         private final List<Token> generateTokens;
         private boolean finished = false;
+        private final UserContext userContext;
 
-        public Generator(String text, SampleParameter sampleParams) {
+        public Generator(UserContext userContext, String text, SampleParameter sampleParams) {
+            this.userContext = userContext;
             this.sampleParams = sampleParams;
 
-            int[] tokens = StringUtils.isNotBlank(text) ? tokenize(text, true) : new int[]{context.getTokenBOS()};
-            if (tokens.length >= context.getContextSize()) {
-                throw new IllegalArgumentException(String.format("Requested tokens (%s) exceed context window of %s", tokens.length, context.getContextSize()));
+            int[] tokens = StringUtils.isNotBlank(text) ? tokenize(text, true) : new int[]{getTokenBOS()};
+            if (tokens.length >= getContextSize()) {
+                throw new IllegalArgumentException(CommonUtils.format("Requested tokens ({0}) exceed context window of {1}", tokens.length, getContextSize()));
             }
             if (sampleParams.isVerbosePrompt()) {
-                log.info(text);
+                log.info(CommonUtils.format("Print prompt text:\n{0}", text));
             }
-            if (context.getInputLength() + tokens.length > context.getContextSize()) {
-                context.truncate(sampleParams.getKeepContextTokensSize());
+            if (userContext.getInputLength() + tokens.length > getContextSize()) {
+                userContext.truncate(sampleParams.getKeepContextTokensSize());
             }
-            int index = Math.max(context.getInputLength(), 0);
-            System.arraycopy(tokens, 0, context.getInputBuffer(), index, tokens.length);
-            context.incrementInputLength(tokens.length);
+            int index = Math.max(userContext.getInputLength(), 0);
+            System.arraycopy(tokens, 0, userContext.getInputBuffer(), index, tokens.length);
+            userContext.incrementInputLength(tokens.length);
 
-            int maxNewTokensSize = (sampleParams.getMaxNewTokensSize() <= 0) ? context.getContextSize() - tokens.length : sampleParams.getMaxNewTokensSize();
-            if (maxNewTokensSize + tokens.length > context.getContextSize()) {
-                maxNewTokensSize = context.getContextSize() - tokens.length;
+            int maxNewTokensSize = (sampleParams.getMaxNewTokensSize() <= 0) ? getContextSize() - tokens.length : sampleParams.getMaxNewTokensSize();
+            if (maxNewTokensSize + tokens.length > getContextSize()) {
+                maxNewTokensSize = getContextSize() - tokens.length;
             }
-            context.setMaxNewTokensSize(maxNewTokensSize);
+            userContext.setMaxNewTokensSize(maxNewTokensSize);
 
             generateTokens = Lists.newArrayList();
+
+            log.info(CommonUtils.format("Generate starting, User id: {0}, context buffer size: {1}, input tokens size: {2}.",
+                    userContext.getId(),
+                    userContext.getInputLength(),
+                    tokens.length
+            ));
         }
 
         @Override
@@ -319,33 +373,33 @@ public class LlamaModel implements AutoCloseable {
         @Override
         public Token next() {
             //evaluation tokens
-            evaluate(context.getInputBuffer());
+            evaluate(userContext);
             //do sample
-            Token token = sample(sampleParams);
+            Token token = sample(userContext, sampleParams);
             //Save new token to the list
             generateTokens.add(token);
-            if (context.getInputLength() + 1 > context.getContextSize()) {
-                context.truncate(sampleParams.getKeepContextTokensSize());
+            if (userContext.getInputLength() + 1 > getContextSize()) {
+                userContext.truncate(sampleParams.getKeepContextTokensSize());
             }
-            context.appendToInputBuffer(token.getId());
+            userContext.appendToInputBuffer(token.getId());
             //
-            if (token.getId() == context.getTokenEOS()) {
+            if (token.getId() == getTokenEOS()) {
                 token.updateFinishReason(FinishReason.FINISHED);
                 finished = true;
-                context.addPastTokensSize(1);
+                userContext.addPastTokensSize(1);
                 return token;
             }
             List<String> stopWords = sampleParams.getStopWords();
             if (stopWords != null && !stopWords.isEmpty() && stopWords.contains(token.getText())) {
                 token.updateFinishReason(FinishReason.STOP);
                 finished = true;
-                context.addPastTokensSize(1);
+                userContext.addPastTokensSize(1);
                 return token;
             }
-            if (generateTokens.size() > context.getMaxNewTokensSize()) {
+            if (generateTokens.size() > userContext.getMaxNewTokensSize()) {
                 token.updateFinishReason(FinishReason.LENGTH);
                 finished = true;
-                context.addPastTokensSize(1);
+                userContext.addPastTokensSize(1);
                 return token;
             }
             return token;
