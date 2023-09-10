@@ -9,10 +9,10 @@ import java.util.stream.IntStream;
 
 public class CommonUtils {
 
-    private static final String CHARACTER_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final String CHARACTER_SET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     public static String randomString(String prefixString) {
-        String randomString = IntStream.range(0, 8).map(i -> new SecureRandom().nextInt(CHARACTER_SET.length())).mapToObj(randomInt -> CHARACTER_SET.substring(randomInt, randomInt + 1)).collect(Collectors.joining());
+        String randomString = IntStream.range(0, 10).map(i -> new SecureRandom().nextInt(CHARACTER_SET.length())).mapToObj(randomInt -> CHARACTER_SET.substring(randomInt, randomInt + 1)).collect(Collectors.joining());
         return StringUtils.join(prefixString, "-", randomString);
     }
 

@@ -8,6 +8,7 @@ import chat.octet.model.LlamaModel;
 import chat.octet.model.beans.FinishReason;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.model.parameters.SampleParameter;
+import chat.octet.utils.CommonUtils;
 import chat.octet.utils.PromptBuilder;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class ChatCompletionService implements AutoCloseable {
     @Value("${model.name}")
     private String modeName;
 
-    private static final String MODEL_PATH = "/llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf";
+    private static final String MODEL_PATH = "/Users/william/development/llm/tools/llama.cpp/zh-models/chinese-alpaca-2-7b/ggml-model-7b-q6_k.gguf";
 
     private static final ModelParameter modelParams = ModelParameter.builder()
             .modelPath(MODEL_PATH)
@@ -63,12 +64,13 @@ public class ChatCompletionService implements AutoCloseable {
                             input = message.getContent();
                         }
                     }
+                    String id = CommonUtils.randomString("octetcmp");
                     String text = PromptBuilder.toPrompt(input);
                     SampleParameter sampleParams = getSampleParameter(requestParams);
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(text, sampleParams, true);
-                        ChatCompletionChunk chunk = new ChatCompletionChunk(modeName, Lists.newArrayList(data));
+                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
 
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(Flux.just(chunk), ChatCompletionChunk.class);
@@ -77,7 +79,7 @@ public class ChatCompletionService implements AutoCloseable {
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(Flux.fromIterable(model.generate(text, sampleParams)).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData("content", token.getText(), token.getFinishReason().name());
-                                return new ChatCompletionChunk(modeName, Lists.newArrayList(data));
+                                return new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
                             }), ChatCompletionChunk.class);
                 })
         );
@@ -92,12 +94,13 @@ public class ChatCompletionService implements AutoCloseable {
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue("Request parameter 'input' cannot be empty"));
                     }
+                    String id = CommonUtils.randomString("octetcmp");
                     String text = PromptBuilder.toPrompt(requestParams.getPrompt(), requestParams.getInput());
                     SampleParameter sampleParams = getSampleParameter(requestParams);
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(text, sampleParams, false);
-                        ChatCompletionChunk chunk = new ChatCompletionChunk(modeName, Lists.newArrayList(data));
+                        ChatCompletionChunk chunk = new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
 
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                 .body(Flux.just(chunk).doOnComplete(model::reset), ChatCompletionChunk.class);
@@ -106,7 +109,7 @@ public class ChatCompletionService implements AutoCloseable {
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(Flux.fromIterable(model.generate(text, sampleParams)).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData(token.getText(), token.getFinishReason().name());
-                                return new ChatCompletionChunk(modeName, Lists.newArrayList(data));
+                                return new ChatCompletionChunk(id, modeName, Lists.newArrayList(data));
                             }).doOnCancel(model::reset).doOnComplete(model::reset), ChatCompletionChunk.class);
                 })
         );
