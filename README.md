@@ -4,6 +4,8 @@
 
 Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggerganov/llama.cpp), this project has the same functionality as other language versions.
 
+----
+
 #### Main content
 - 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 - 🚀 Supported:
@@ -13,6 +15,8 @@ Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggergan
 
 
 ### Usages
+
+----
 
 #### ConsoleQA
 
@@ -89,8 +93,11 @@ curl --location 'http://SERVER:PORT/v1/chat/completions' \
 > Some features are being optimized and updated.
 
 ### Feedback
+
+----
+
 - If you have any questions, please submit them in GitHub Issue.
 
----
+----
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
