@@ -8,6 +8,7 @@ Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggergan
 - 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 - 🚀 Supported:
   - [X] OpenAPI (some sampling parameters have been adjusted to Llama2)
+  - [X] Multi-user sessions
   - [X] Cloud deployment
   - [X] CLI interaction
 
@@ -61,6 +62,7 @@ public class ConsoleQA {
 curl --location 'http://SERVER:PORT/v1/completions' \
 --header 'Content-Type: application/json' \
 --data '{
+    "user": "William",
     "stream": true,
     "input": "Who are you",
     "prompt": "<YOUR PROMPTS>"
@@ -73,6 +75,7 @@ curl --location 'http://SERVER:PORT/v1/completions' \
 curl --location 'http://SERVER:PORT/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
+    "user": "William",
     "stream": true,
     "messages": [
         {

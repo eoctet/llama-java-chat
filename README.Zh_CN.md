@@ -7,7 +7,8 @@
 #### 主要功能
 - 🚀 基于 Llama.cpp 构建，支持GGUF模型，更多细节请关注 **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 - 🚀 支持:
-  - [X] OpenAPI （部分采样参数已按照Llama2进行调整）
+  - [X] OpenAPI（部分采样参数已按照Llama2进行调整）
+  - [X] 多用户会话，你可以使用不同的用户身份进行聊天
   - [X] 服务部署
   - [X] 命令行交互
 
@@ -61,6 +62,7 @@ public class ConsoleQA {
 curl --location 'http://SERVER:PORT/v1/completions' \
 --header 'Content-Type: application/json' \
 --data '{
+    "user": "William",
     "stream": true,
     "input": "你是谁",
     "prompt": "<提示词>"
@@ -73,6 +75,7 @@ curl --location 'http://SERVER:PORT/v1/completions' \
 curl --location 'http://SERVER:PORT/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
+    "user": "William",
     "stream": true,
     "messages": [
         {
