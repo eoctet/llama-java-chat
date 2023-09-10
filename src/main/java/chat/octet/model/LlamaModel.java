@@ -1,6 +1,7 @@
 package chat.octet.model;
 
 
+import chat.octet.exceptions.ModelException;
 import chat.octet.llama.LlamaLibrary;
 import chat.octet.llama.NativeSize;
 import chat.octet.model.beans.FinishReason;
@@ -10,6 +11,7 @@ import chat.octet.model.parameters.SampleParameter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.sun.jna.ptr.FloatByReference;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,6 +31,7 @@ import java.util.function.Consumer;
  * @author william
  * @since 1.0
  */
+@Slf4j
 public class LlamaModel implements AutoCloseable {
 
     private final ModelParameter modelParams;
@@ -42,7 +45,7 @@ public class LlamaModel implements AutoCloseable {
         Preconditions.checkNotNull(modelParams.getModelPath(), "Model file path cannot be null");
 
         if (!Files.exists(new File(modelParams.getModelPath()).toPath())) {
-            throw new RuntimeException("Model file is not exists, please check the file path");
+            throw new ModelException("Model file is not exists, please check the file path");
         }
 
         this.modelParams = modelParams;
@@ -53,17 +56,17 @@ public class LlamaModel implements AutoCloseable {
 
         this.model = llama.llama_load_model_from_file(modelParams.getModelPath(), modelParams.getLlamaContextParams());
         if (this.model == null) {
-            throw new RuntimeException("Load model failed");
+            throw new ModelException("Load model failed");
         }
 
         //apple lora from file
         if (StringUtils.isNotBlank(modelParams.getLoraPath())) {
             if (!Files.exists(new File(modelParams.getLoraPath()).toPath())) {
-                throw new RuntimeException("Lora model file is not exists, please check the file path");
+                throw new ModelException("Lora model file is not exists, please check the file path");
             }
             int status = this.llama.llama_model_apply_lora_from_file(model, modelParams.getLoraPath(), modelParams.getLoraBase(), modelParams.getThreads());
             if (status != 0) {
-                throw new RuntimeException(String.format("Failed to apply LoRA from lora path: %s to base path: %s", modelParams.getLoraPath(), modelParams.getLoraBase()));
+                throw new ModelException(String.format("Failed to apply LoRA from lora path: %s to base path: %s", modelParams.getLoraPath(), modelParams.getLoraBase()));
             }
         }
 
@@ -71,8 +74,9 @@ public class LlamaModel implements AutoCloseable {
 
         if (modelParams.isVerbose()) {
             String systemInfo = llama.llama_print_system_info();
-            System.out.println("System info: " + systemInfo);
+            log.info("system info: " + systemInfo);
         }
+        log.info("model parameters: " + modelParams);
     }
 
     private void settingLlamaContextParameters() {
@@ -101,22 +105,6 @@ public class LlamaModel implements AutoCloseable {
             params.mul_mat_q = (byte) 1;
         }
         this.modelParams.setLlamaContextParams(params);
-    }
-
-    public String completion(String text, SampleParameter sampleParams) {
-        Preconditions.checkNotNull(text, "Text cannot be null");
-        Preconditions.checkNotNull(sampleParams, "Sample parameter cannot be null");
-
-        Generator generator = new Generator(text, sampleParams);
-        while (generator.hasNext()) {
-            generator.next();
-        }
-        if (modelParams.isVerbose()) {
-            llama.llama_print_timings(context.getLlamaContext());
-            llama.llama_reset_timings(context.getLlamaContext());
-        }
-        context.reset();
-        return generator.getFullGenerateText();
     }
 
     public Iterable<Token> generate(String text, SampleParameter sampleParams) {
@@ -164,7 +152,7 @@ public class LlamaModel implements AutoCloseable {
         IntBuffer tokens = IntBuffer.allocate(context.getContextSize());
         int nextTokens = llama.llama_tokenize_with_model(model, text, tokens, context.getContextSize(), addBos ? (byte) 1 : 0);
         if (nextTokens < 0) {
-            throw new RuntimeException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
+            throw new ModelException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
         return ArrayUtils.subarray(tokens.array(), 0, nextTokens);
     }
@@ -175,6 +163,10 @@ public class LlamaModel implements AutoCloseable {
         return new String(buffer, 0, size, StandardCharsets.UTF_8);
     }
 
+    public void reset() {
+        context.reset();
+    }
+
     protected void evaluate(int[] tokens) {
         while (context.doEvaluation()) {
             int evaluateSize = context.getEvaluateSize();
@@ -183,7 +175,7 @@ public class LlamaModel implements AutoCloseable {
             int[] batchTokens = ArrayUtils.subarray(tokens, context.getPastTokensSize(), endIndex);
             int returnCode = llama.llama_eval(context.getLlamaContext(), IntBuffer.wrap(batchTokens), evaluateSize, context.getPastTokensSize(), modelParams.getThreads());
             if (returnCode != 0) {
-                throw new RuntimeException("Llama_eval returned " + returnCode);
+                throw new ModelException("Llama_eval returned " + returnCode);
             }
             context.addPastTokensSize(evaluateSize);
         }
@@ -301,7 +293,7 @@ public class LlamaModel implements AutoCloseable {
                 throw new IllegalArgumentException(String.format("Requested tokens (%s) exceed context window of %s", tokens.length, context.getContextSize()));
             }
             if (sampleParams.isVerbosePrompt()) {
-                System.out.println(text);
+                log.info(text);
             }
             if (context.getInputLength() + tokens.length > context.getContextSize()) {
                 context.truncate(sampleParams.getKeepContextTokensSize());
@@ -340,17 +332,20 @@ public class LlamaModel implements AutoCloseable {
             if (token.getId() == context.getTokenEOS()) {
                 token.updateFinishReason(FinishReason.FINISHED);
                 finished = true;
+                context.addPastTokensSize(1);
                 return token;
             }
             List<String> stopWords = sampleParams.getStopWords();
             if (stopWords != null && !stopWords.isEmpty() && stopWords.contains(token.getText())) {
                 token.updateFinishReason(FinishReason.STOP);
                 finished = true;
+                context.addPastTokensSize(1);
                 return token;
             }
             if (generateTokens.size() > context.getMaxNewTokensSize()) {
                 token.updateFinishReason(FinishReason.LENGTH);
                 finished = true;
+                context.addPastTokensSize(1);
                 return token;
             }
             return token;

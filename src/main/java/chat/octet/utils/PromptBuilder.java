@@ -16,8 +16,8 @@ public class PromptBuilder {
     private static final String SYS_END_SUFFIX = "\n<</SYS>>\n\n";
 
     public static String toPrompt(String system, String question) {
-        if (StringUtils.isAnyBlank(system, question)) {
-            throw new IllegalArgumentException("prompt parameter cannot be empty");
+        if (StringUtils.isBlank(system)) {
+            return toPrompt(question);
         }
         return StringUtils.join(INST_BEGIN_SUFFIX, SYS_BEGIN_SUFFIX, system, SYS_END_SUFFIX, question, INST_END_SUFFIX);
     }

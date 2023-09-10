@@ -113,7 +113,7 @@ public final class SampleParameter {
      * Maximum new token generation size.
      */
     @Builder.Default
-    private int maxNewTokensSize = 200;
+    private int maxNewTokensSize = 0;
 
     /**
      * <b>suffix</b><br/>
