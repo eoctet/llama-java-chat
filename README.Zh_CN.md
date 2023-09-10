@@ -4,8 +4,6 @@
 
 这是一个基于 🦙[`llama.cpp`](https://github.com/ggerganov/llama.cpp)  C API进行开发的Java版本，本项目和其他语言版本具有一样的功能。
 
----
-
 #### 主要功能
 - 🚀 基于 Llama.cpp 构建，支持GGUF模型，更多细节请关注 **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 - 🚀 支持:
@@ -14,10 +12,9 @@
   - [X] 命令行交互
 
 
-### 使用示例
+## 使用示例
 
-----
- 
+
 #### ConsoleQA
 
 ```java
@@ -92,12 +89,10 @@ curl --location 'http://SERVER:PORT/v1/chat/completions' \
 > 
 > 部分功能还在优化完善，随时更新中。
 
-### 问题反馈
-
-----
+## 问题反馈
 
 - 如果你有任何疑问，欢迎在GitHub Issue中提交。
 
----
+----
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
