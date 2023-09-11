@@ -1,7 +1,7 @@
 package chat.octet.api.model;
 
 import chat.octet.model.UserContextManager;
-import chat.octet.model.parameters.SampleParameter;
+import chat.octet.model.parameters.GenerateParameter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -59,7 +59,7 @@ public class ChatCompletionRequestParameter {
     private Float repeatPenalty;
 
     @JsonProperty("mirostat_mode")
-    private SampleParameter.MirostatMode mirostatMode;
+    private GenerateParameter.MirostatMode mirostatMode;
 
     @JsonProperty("mirostat_eta")
     private Float mirostatETA;

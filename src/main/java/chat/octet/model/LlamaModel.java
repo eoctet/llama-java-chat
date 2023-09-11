@@ -6,8 +6,8 @@ import chat.octet.llama.LlamaLibrary;
 import chat.octet.llama.NativeSize;
 import chat.octet.model.beans.FinishReason;
 import chat.octet.model.beans.Token;
+import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
-import chat.octet.model.parameters.SampleParameter;
 import chat.octet.utils.CommonUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -140,15 +140,15 @@ public class LlamaModel implements AutoCloseable {
         this.modelParams.setLlamaContextParams(params);
     }
 
-    public Iterable<Token> generate(String text, SampleParameter sampleParams) {
+    public Iterable<Token> generate(String text, GenerateParameter generateParams) {
         UserContext userContext = UserContextManager.getInstance().getDefaultUserContext(this);
-        return generate(userContext, text, sampleParams);
+        return generate(userContext, text, generateParams);
     }
 
-    public Iterable<Token> generate(UserContext userContext, String text, SampleParameter sampleParams) {
+    public Iterable<Token> generate(UserContext userContext, String text, GenerateParameter generateParams) {
         Preconditions.checkNotNull(userContext, "User context cannot be null");
         Preconditions.checkNotNull(text, "Text cannot be null");
-        Preconditions.checkNotNull(sampleParams, "Sample parameter cannot be null");
+        Preconditions.checkNotNull(generateParams, "Generate parameter cannot be null");
 
         return new Iterable<Token>() {
 
@@ -158,7 +158,7 @@ public class LlamaModel implements AutoCloseable {
             @Override
             public Iterator<Token> iterator() {
                 if (generator == null) {
-                    generator = new Generator(userContext, text, sampleParams);
+                    generator = new Generator(userContext, text, generateParams);
                 }
                 return generator;
             }
@@ -224,7 +224,7 @@ public class LlamaModel implements AutoCloseable {
         }
     }
 
-    protected Token sample(UserContext userContext, SampleParameter sampleParams) {
+    protected Token sample(UserContext userContext, GenerateParameter generateParams) {
         long timestamp = System.currentTimeMillis();
 
         //reset candidates data
@@ -240,7 +240,7 @@ public class LlamaModel implements AutoCloseable {
                 candidates,
                 IntBuffer.wrap(lastTokens),
                 getNativeLastTokensSize(),
-                sampleParams.getRepeatPenalty()
+                generateParams.getRepeatPenalty()
         );
 
         llama.llama_sample_frequency_and_presence_penalties(
@@ -248,11 +248,11 @@ public class LlamaModel implements AutoCloseable {
                 candidates,
                 IntBuffer.wrap(lastTokens),
                 getNativeLastTokensSize(),
-                sampleParams.getFrequencyPenalty(),
-                sampleParams.getPresencePenalty()
+                generateParams.getFrequencyPenalty(),
+                generateParams.getPresencePenalty()
         );
 
-        if (!sampleParams.isPenalizeNl()) {
+        if (!generateParams.isPenalizeNl()) {
             float nlLogit = logits[getTokenNL()];
             LlamaLibrary.llama_token_data tokenData = (LlamaLibrary.llama_token_data) candidates.data.toArray(getVocabSize())[getTokenNL()];
             tokenData.logit = nlLogit;
@@ -262,45 +262,45 @@ public class LlamaModel implements AutoCloseable {
         //TODO like: void llama_sample_grammar(llama_context ctx, llama_token_data_array candidates, llama_grammar grammar);
 
         int tokenId;
-        if (sampleParams.getTemperature() == 0) {
+        if (generateParams.getTemperature() == 0) {
             tokenId = llama.llama_sample_token_greedy(llamaContext, candidates);
         } else {
-            float mirostatMu = 2.0f * sampleParams.getMirostatTAU();
+            float mirostatMu = 2.0f * generateParams.getMirostatTAU();
             FloatBuffer mu = FloatBuffer.allocate(1);
             mu.put(mirostatMu);
 
-            switch (sampleParams.getMirostatMode()) {
+            switch (generateParams.getMirostatMode()) {
                 case V1:
                     int mirostatM = 100;
-                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
+                    llama.llama_sample_temperature(llamaContext, candidates, generateParams.getTemperature());
                     tokenId = llama.llama_sample_token_mirostat(
                             llamaContext,
                             candidates,
-                            sampleParams.getMirostatTAU(),
-                            sampleParams.getMirostatETA(),
+                            generateParams.getMirostatTAU(),
+                            generateParams.getMirostatETA(),
                             mirostatM,
                             mu
                     );
                     break;
                 case V2:
-                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
+                    llama.llama_sample_temperature(llamaContext, candidates, generateParams.getTemperature());
                     tokenId = llama.llama_sample_token_mirostat_v2(
                             llamaContext,
                             candidates,
-                            sampleParams.getMirostatTAU(),
-                            sampleParams.getMirostatETA(),
+                            generateParams.getMirostatTAU(),
+                            generateParams.getMirostatETA(),
                             mu
                     );
                     break;
                 case DISABLED:
                 default:
                     NativeSize minKeep = new NativeSize(1);
-                    int topK = sampleParams.getTopK() <= 0 ? getVocabSize() : sampleParams.getTopK();
+                    int topK = generateParams.getTopK() <= 0 ? getVocabSize() : generateParams.getTopK();
                     llama.llama_sample_top_k(llamaContext, candidates, topK, minKeep);
-                    llama.llama_sample_tail_free(llamaContext, candidates, sampleParams.getTsf(), minKeep);
+                    llama.llama_sample_tail_free(llamaContext, candidates, generateParams.getTsf(), minKeep);
                     llama.llama_sample_typical(llamaContext, candidates, 1.0f, minKeep);
-                    llama.llama_sample_top_p(llamaContext, candidates, sampleParams.getTopP(), minKeep);
-                    llama.llama_sample_temperature(llamaContext, candidates, sampleParams.getTemperature());
+                    llama.llama_sample_top_p(llamaContext, candidates, generateParams.getTopP(), minKeep);
+                    llama.llama_sample_temperature(llamaContext, candidates, generateParams.getTemperature());
                     tokenId = llama.llama_sample_token(llamaContext, candidates);
                     break;
             }
@@ -327,30 +327,30 @@ public class LlamaModel implements AutoCloseable {
     }
 
     private class Generator implements Iterator<Token> {
-        private final SampleParameter sampleParams;
+        private final GenerateParameter generateParams;
         private final List<Token> generateTokens;
         private boolean finished = false;
         private final UserContext userContext;
 
-        public Generator(UserContext userContext, String text, SampleParameter sampleParams) {
+        public Generator(UserContext userContext, String text, GenerateParameter generateParams) {
             this.userContext = userContext;
-            this.sampleParams = sampleParams;
+            this.generateParams = generateParams;
 
             int[] tokens = StringUtils.isNotBlank(text) ? tokenize(text, true) : new int[]{getTokenBOS()};
             if (tokens.length >= getContextSize()) {
                 throw new IllegalArgumentException(CommonUtils.format("Requested tokens ({0}) exceed context window of {1}", tokens.length, getContextSize()));
             }
-            if (sampleParams.isVerbosePrompt()) {
+            if (generateParams.isVerbosePrompt()) {
                 log.info(CommonUtils.format("Print prompt text:\n{0}", text));
             }
             if (userContext.getInputLength() + tokens.length > getContextSize()) {
-                userContext.truncate(sampleParams.getKeepContextTokensSize());
+                userContext.truncate(generateParams.getKeepContextTokensSize());
             }
             int index = Math.max(userContext.getInputLength(), 0);
             System.arraycopy(tokens, 0, userContext.getInputBuffer(), index, tokens.length);
             userContext.incrementInputLength(tokens.length);
 
-            int maxNewTokensSize = (sampleParams.getMaxNewTokensSize() <= 0) ? getContextSize() - tokens.length : sampleParams.getMaxNewTokensSize();
+            int maxNewTokensSize = (generateParams.getMaxNewTokensSize() <= 0) ? getContextSize() - tokens.length : generateParams.getMaxNewTokensSize();
             if (maxNewTokensSize + tokens.length > getContextSize()) {
                 maxNewTokensSize = getContextSize() - tokens.length;
             }
@@ -375,11 +375,11 @@ public class LlamaModel implements AutoCloseable {
             //evaluation tokens
             evaluate(userContext);
             //do sample
-            Token token = sample(userContext, sampleParams);
+            Token token = sample(userContext, generateParams);
             //Save new token to the list
             generateTokens.add(token);
             if (userContext.getInputLength() + 1 > getContextSize()) {
-                userContext.truncate(sampleParams.getKeepContextTokensSize());
+                userContext.truncate(generateParams.getKeepContextTokensSize());
             }
             userContext.appendToInputBuffer(token.getId());
             //
@@ -389,7 +389,7 @@ public class LlamaModel implements AutoCloseable {
                 userContext.addPastTokensSize(1);
                 return token;
             }
-            List<String> stopWords = sampleParams.getStopWords();
+            List<String> stopWords = generateParams.getStopWords();
             if (stopWords != null && !stopWords.isEmpty() && stopWords.contains(token.getText())) {
                 token.updateFinishReason(FinishReason.STOP);
                 finished = true;

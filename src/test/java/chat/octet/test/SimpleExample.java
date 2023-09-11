@@ -2,7 +2,7 @@ package chat.octet.test;
 
 import chat.octet.model.LlamaModel;
 import chat.octet.model.parameters.ModelParameter;
-import chat.octet.model.parameters.SampleParameter;
+import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.utils.PromptBuilder;
 
 public class SimpleExample {
@@ -21,10 +21,10 @@ public class SimpleExample {
                 "Who are you?"
         );
 
-        SampleParameter sampleParams = SampleParameter.builder().build();
+        GenerateParameter generateParams = GenerateParameter.builder().build();
 
         try (LlamaModel model = new LlamaModel(modelParams)) {
-            model.generate(text, sampleParams).forEach(e -> System.out.print(e.getText()));
+            model.generate(text, generateParams).forEach(e -> System.out.print(e.getText()));
         }
     }
 }

@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @Builder
 @ToString
-public final class SampleParameter {
+public final class GenerateParameter {
 
     /**
      * <b>temperature</b><br/>

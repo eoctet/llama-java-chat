@@ -34,7 +34,7 @@ public class ConsoleQA {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
              LlamaModel model = new LlamaModel(modelParams)) {
 
-            SampleParameter sampleParams = SampleParameter.builder().build();
+            GenerateParameter generateParams = GenerateParameter.builder().build();
             String system = "Answer the questions.";
 
             while (true) {
@@ -44,7 +44,8 @@ public class ConsoleQA {
                     break;
                 }
                 String question = PromptBuilder.toPrompt(system, input);
-                model.generate(question, sampleParams).forEach(e -> System.out.print(e.getText()));
+                model.generate(question, generateParams).forEach(e -> System.out.print(e.getText()));
+                model.printTimings();
             }
         } catch (Exception e) {
             System.err.println("Error: " + e);
