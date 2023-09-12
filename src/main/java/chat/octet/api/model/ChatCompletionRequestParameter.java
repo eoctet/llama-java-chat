@@ -76,4 +76,7 @@ public class ChatCompletionRequestParameter {
     @JsonProperty("logit_bias_type")
     private List<String> logitBiasType;
 
+    @JsonProperty("verbose")
+    private boolean verbose;
+
 }

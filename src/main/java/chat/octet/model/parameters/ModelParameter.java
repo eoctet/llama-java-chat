@@ -3,7 +3,6 @@ package chat.octet.model.parameters;
 import chat.octet.llama.LlamaLibrary;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
@@ -189,11 +188,5 @@ public final class ModelParameter {
      */
     @Builder.Default
     private boolean verbose = false;
-
-    /**
-     * llama context params
-     */
-    @Setter
-    private LlamaLibrary.llama_context_params.ByValue llamaContextParams;
 
 }

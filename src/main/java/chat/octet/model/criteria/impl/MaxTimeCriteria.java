@@ -2,6 +2,9 @@ package chat.octet.model.criteria.impl;
 
 import chat.octet.model.criteria.StoppingCriteria;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public class MaxTimeCriteria implements StoppingCriteria {
 
     private final long maxTimeMillis;
@@ -18,7 +21,7 @@ public class MaxTimeCriteria implements StoppingCriteria {
     }
 
     @Override
-    public boolean criteria(int[] inputTokenIds, float[] scores, Object... args) {
+    public boolean criteria(@Nullable int[] inputTokenIds, @Nonnull float[] scores, Object... args) {
         return System.currentTimeMillis() - this.initialTimestamp > maxTimeMillis;
     }
 }

@@ -3,6 +3,8 @@ package chat.octet.model.criteria;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -17,7 +19,7 @@ public class StoppingCriteriaList extends ArrayList<StoppingCriteria> implements
     }
 
     @Override
-    public boolean criteria(int[] inputTokenIds, float[] scores, Object... args) {
+    public boolean criteria(@Nullable int[] inputTokenIds, @Nonnull float[] scores, Object... args) {
         for (StoppingCriteria criteria : this) {
             if (criteria.criteria(inputTokenIds, scores, args)) {
                 log.debug("Matched stop criteria, criteria name: {}.", criteria.getClass().getName());

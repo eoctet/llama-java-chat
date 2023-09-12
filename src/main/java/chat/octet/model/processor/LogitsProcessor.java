@@ -1,8 +1,11 @@
 package chat.octet.model.processor;
 
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public interface LogitsProcessor {
 
-    float[] processor(int[] inputTokenIds, float[] scores, Object... args);
+    float[] processor(@Nullable int[] inputTokenIds, @Nonnull float[] scores, Object... args);
 
 }

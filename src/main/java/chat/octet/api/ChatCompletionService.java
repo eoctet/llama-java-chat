@@ -74,7 +74,7 @@ public class ChatCompletionService implements AutoCloseable {
                     String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(input);
                     GenerateParameter generateParams = getGenerateParameter(requestParams);
-                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model);
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(model, requestParams.getUser());
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(userContext, text, generateParams, true);
@@ -90,7 +90,7 @@ public class ChatCompletionService implements AutoCloseable {
                                 }), ChatCompletionChunk.class);
                     }
                     //streaming output
-                    Iterable<Token> tokenIterable = model.generate(userContext, text, generateParams);
+                    Iterable<Token> tokenIterable = model.generate(generateParams, userContext, text);
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(Flux.fromIterable(tokenIterable).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData("content", token.getText(), token.getFinishReason().name());
@@ -119,7 +119,7 @@ public class ChatCompletionService implements AutoCloseable {
                     String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(requestParams.getPrompt(), requestParams.getInput());
                     GenerateParameter generateParams = getGenerateParameter(requestParams);
-                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model);
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(model, requestParams.getUser());
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(userContext, text, generateParams, false);
@@ -135,7 +135,7 @@ public class ChatCompletionService implements AutoCloseable {
                                 }), ChatCompletionChunk.class);
                     }
                     //streaming output
-                    Iterable<Token> tokenIterable = model.generate(userContext, text, generateParams);
+                    Iterable<Token> tokenIterable = model.generate(generateParams, userContext, text);
                     return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(Flux.fromIterable(tokenIterable).map(token -> {
                                 ChatCompletionData data = new ChatCompletionData(token.getText(), token.getFinishReason().name());
@@ -182,13 +182,14 @@ public class ChatCompletionService implements AutoCloseable {
                 .mirostatETA(Optional.ofNullable(params.getMirostatETA()).orElse(DEFAULT_PARAMETER.getMirostatETA()))
                 .mirostatTAU(Optional.ofNullable(params.getMirostatTAU()).orElse(DEFAULT_PARAMETER.getMirostatTAU()))
                 .stoppingCriteriaList(stopping)
+                .verbosePrompt(params.isVerbose())
                 .build();
     }
 
     private ChatCompletionData generateCompletionData(UserContext userContext, String text, GenerateParameter generateParams, boolean chat) {
         StringBuilder content = new StringBuilder();
         AtomicReference<FinishReason> finishReason = new AtomicReference<>(FinishReason.NONE);
-        model.generate(userContext, text, generateParams).forEach(token -> {
+        model.generate(generateParams, userContext, text).forEach(token -> {
             content.append(token.getText());
             finishReason.set(token.getFinishReason());
         });

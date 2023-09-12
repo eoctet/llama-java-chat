@@ -30,10 +30,10 @@ public final class UserContextManager {
     }
 
     public UserContext getDefaultUserContext(LlamaModel model) {
-        return createUserContext(DEFAULT_USER_ID, model);
+        return createUserContext(model, DEFAULT_USER_ID);
     }
 
-    public UserContext createUserContext(String id, LlamaModel model) {
+    public UserContext createUserContext(LlamaModel model, String id) {
         boolean exists = USER_CONTEXT_CACHE.containsKey(id);
         if (!exists) {
             if (USER_CONTEXT_CACHE.size() > USER_CONTEXT_LIMIT) {
@@ -49,7 +49,7 @@ public final class UserContextManager {
     public void removeUserContext(String id) {
         boolean exists = USER_CONTEXT_CACHE.containsKey(id);
         if (exists) {
-            USER_CONTEXT_CACHE.get(id).destory();
+            USER_CONTEXT_CACHE.get(id).destroy();
             USER_CONTEXT_CACHE.remove(id);
             log.info(CommonUtils.format("Removed user context, User id: {0}.", id));
         }

@@ -1,7 +1,5 @@
 package chat.octet.model;
 
-import chat.octet.llama.LlamaLibrary;
-import chat.octet.llama.NativeSize;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;
@@ -16,15 +14,12 @@ public class UserContext implements Serializable {
 
     @Getter
     private final String id;
-    @Getter
-    private final int[] inputBuffer;
+    private final int[] inputIds;
     private final int contextSize;
     private final int vocabSize;
     private final AtomicInteger inputLength;
     private final AtomicInteger pastTokensSize;
-    private LlamaLibrary.llama_token_data.ByReference tokenData;
-    private LlamaLibrary.llama_token_data[] tokenDataArrays;
-    private LlamaLibrary.llama_token_data_array candidates;
+
     @Getter
     @Setter
     private int maxNewTokensSize;
@@ -37,28 +32,34 @@ public class UserContext implements Serializable {
         this.id = id;
         this.contextSize = contextSize;
         this.vocabSize = vocabSize;
-        this.inputBuffer = new int[contextSize];
+        this.inputIds = new int[contextSize];
         this.inputLength = new AtomicInteger(0);
         this.pastTokensSize = new AtomicInteger(0);
-        this.tokenData = new LlamaLibrary.llama_token_data.ByReference();
-        this.tokenDataArrays = (LlamaLibrary.llama_token_data[]) tokenData.toArray(vocabSize);
-        this.candidates = new LlamaLibrary.llama_token_data_array();
         this.createtime = System.currentTimeMillis();
         this.scores = new float[contextSize][vocabSize];
         this.isLogitsAll = isLogitsAll;
     }
 
+    public int[] getInput() {
+        return inputIds;
+    }
+
+    public int[] getInputCopy() {
+        return ArrayUtils.subarray(inputIds, 0, getInputLength());
+    }
+
+    public void appendInput(int[] tokens) {
+        System.arraycopy(tokens, 0, inputIds, Math.max(getInputLength(), 0), tokens.length);
+        inputLength.addAndGet(tokens.length);
+    }
+
+    public void appendInput(int token) {
+        inputIds[getInputLength()] = token;
+        inputLength.incrementAndGet();
+    }
+
     public int getInputLength() {
         return inputLength.get();
-    }
-
-    public void incrementInputLength(int length) {
-        inputLength.addAndGet(length);
-    }
-
-    public void appendToInputBuffer(int token) {
-        inputBuffer[getInputLength()] = token;
-        inputLength.incrementAndGet();
     }
 
     public int getPastTokensSize() {
@@ -69,36 +70,13 @@ public class UserContext implements Serializable {
         pastTokensSize.addAndGet(numbers);
     }
 
-    public float getTokenLogProbability(int token) {
-        return tokenDataArrays[token].p;
-    }
-
-    public boolean doEvaluation() {
-        return getPastTokensSize() < getInputLength();
-    }
-
-    public int getEvaluationSize() {
-        return getInputLength() - getPastTokensSize();
-    }
-
-    public LlamaLibrary.llama_token_data_array resetCandidatesData(float[] logits) {
-        for (int i = 0; i < vocabSize; i++) {
-            tokenDataArrays[i].id = i;
-            tokenDataArrays[i].logit = logits[i];
-        }
-        candidates.data = tokenData;
-        candidates.size = new NativeSize(vocabSize);
-        candidates.sorted = (byte) 0;
-        return candidates;
-    }
-
     public void truncate(int keepSize) {
         if (keepSize <= 0 || keepSize >= contextSize) {
             keepSize = contextSize / 2;
         }
-        int[] newTokensBuffer = ArrayUtils.subarray(inputBuffer, keepSize, inputBuffer.length);
-        Arrays.fill(inputBuffer, 0);
-        System.arraycopy(newTokensBuffer, 0, inputBuffer, 0, newTokensBuffer.length);
+        int[] newTokensBuffer = ArrayUtils.subarray(inputIds, keepSize, inputIds.length);
+        Arrays.fill(inputIds, 0);
+        System.arraycopy(newTokensBuffer, 0, inputIds, 0, newTokensBuffer.length);
 
         float[][] newScores = ArrayUtils.subarray(scores, keepSize, scores.length);
         scores = new float[contextSize][vocabSize];
@@ -108,8 +86,8 @@ public class UserContext implements Serializable {
         inputLength.set(keepSize);
     }
 
-    public void saveScores(float[] values) {
-        int start = isLogitsAll ? getPastTokensSize() : 0;
+    public void saveScores(float[] values, int evaluateTotalSize) {
+        int start = isLogitsAll ? Math.max(getInputLength() - evaluateTotalSize, 0) : 0;
         int end = isLogitsAll ? getInputLength() : 1;
         for (int i = start; i < end; i++) {
             System.arraycopy(values, 0, scores[i], 0, values.length);
@@ -126,13 +104,10 @@ public class UserContext implements Serializable {
         return ArrayUtils.subarray(scores[index], 0, scores[index].length);
     }
 
-    public void destory() {
+    public void destroy() {
         this.pastTokensSize.set(0);
         this.inputLength.set(0);
-        Arrays.fill(this.inputBuffer, 0);
-        this.tokenData = null;
-        this.tokenDataArrays = null;
-        this.candidates = null;
+        Arrays.fill(this.inputIds, 0);
         this.scores = null;
     }
 

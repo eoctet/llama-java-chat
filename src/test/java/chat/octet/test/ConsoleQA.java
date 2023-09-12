@@ -1,8 +1,8 @@
 package chat.octet.test;
 
 import chat.octet.model.LlamaModel;
-import chat.octet.model.parameters.ModelParameter;
 import chat.octet.model.parameters.GenerateParameter;
+import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.PromptBuilder;
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,7 +35,7 @@ public class ConsoleQA {
                     break;
                 }
                 String question = PromptBuilder.toPrompt(system, input);
-                model.generate(question, generateParams).forEach(e -> System.out.print(e.getText()));
+                model.generate(generateParams, question).forEach(e -> System.out.print(e.getText()));
                 model.printTimings();
             }
         } catch (Exception e) {
