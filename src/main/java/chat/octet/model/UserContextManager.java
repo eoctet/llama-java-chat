@@ -30,16 +30,16 @@ public final class UserContextManager {
     }
 
     public UserContext getDefaultUserContext(LlamaModel model) {
-        return createUserContext(DEFAULT_USER_ID, model.getContextSize(), model.getVocabSize());
+        return createUserContext(DEFAULT_USER_ID, model);
     }
 
-    public UserContext createUserContext(String id, int contextSize, int vocabSize) {
+    public UserContext createUserContext(String id, LlamaModel model) {
         boolean exists = USER_CONTEXT_CACHE.containsKey(id);
         if (!exists) {
             if (USER_CONTEXT_CACHE.size() > USER_CONTEXT_LIMIT) {
                 throw new ServerException("Cache context size is out of limit: " + USER_CONTEXT_LIMIT);
             }
-            UserContext userContext = new UserContext(id, contextSize, vocabSize);
+            UserContext userContext = new UserContext(id, model.getContextSize(), model.getVocabSize(), model.getModelParams().isLogitsAll());
             USER_CONTEXT_CACHE.put(id, userContext);
             log.info(CommonUtils.format("Create new user context, User id: {0}, user context cache size: {1}.", userContext.getId(), USER_CONTEXT_CACHE.size()));
         }

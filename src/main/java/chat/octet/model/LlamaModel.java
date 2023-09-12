@@ -8,6 +8,7 @@ import chat.octet.model.beans.FinishReason;
 import chat.octet.model.beans.Token;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
+import chat.octet.model.processor.LogitsProcessorList;
 import chat.octet.utils.CommonUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -36,6 +37,7 @@ import java.util.List;
 @Slf4j
 public class LlamaModel implements AutoCloseable {
 
+    @Getter
     private final ModelParameter modelParams;
     private final LlamaLibrary llama;
     private final LlamaLibrary.llama_model model;
@@ -178,7 +180,7 @@ public class LlamaModel implements AutoCloseable {
 
         int[] tokens = tokenize(new String(text.getBytes(StandardCharsets.UTF_8)), true);
         String defaultId = "embedding";
-        UserContext userContext = UserContextManager.getInstance().createUserContext(defaultId, getContextSize(), getVocabSize());
+        UserContext userContext = UserContextManager.getInstance().createUserContext(defaultId, this);
         System.arraycopy(tokens, 0, userContext.getInputBuffer(), 0, tokens.length);
         //
         evaluate(userContext);
@@ -220,6 +222,8 @@ public class LlamaModel implements AutoCloseable {
             if (returnCode != 0) {
                 throw new ModelException("Llama_eval returned " + returnCode);
             }
+            //
+            userContext.saveScores(logitsPointer.getFloatArray(0, vocabSize));
             userContext.addPastTokensSize(evaluateSize);
         }
     }
@@ -227,8 +231,14 @@ public class LlamaModel implements AutoCloseable {
     protected Token sample(UserContext userContext, GenerateParameter generateParams) {
         long timestamp = System.currentTimeMillis();
 
-        //reset candidates data
-        float[] logits = logitsPointer.getFloatArray(0, vocabSize);
+        float[] logits = userContext.getScores();
+
+        if (generateParams.getLogitsProcessorList() != null) {
+            LogitsProcessorList logitsProcessors = generateParams.getLogitsProcessorList();
+            int[] inputTokens = ArrayUtils.subarray(userContext.getInputBuffer(), 0, userContext.getInputLength());
+            logits = logitsProcessors.processor(inputTokens, logits);
+            userContext.updateScores(logits);
+        }
         LlamaLibrary.llama_token_data_array candidates = userContext.resetCandidatesData(logits);
 
         //penalty process
@@ -389,12 +399,16 @@ public class LlamaModel implements AutoCloseable {
                 userContext.addPastTokensSize(1);
                 return token;
             }
-            List<String> stopWords = generateParams.getStopWords();
-            if (stopWords != null && !stopWords.isEmpty() && stopWords.contains(token.getText())) {
-                token.updateFinishReason(FinishReason.STOP);
-                finished = true;
-                userContext.addPastTokensSize(1);
-                return token;
+            if (generateParams.getStoppingCriteriaList() != null) {
+                int[] inputTokens = ArrayUtils.subarray(userContext.getInputBuffer(), 0, userContext.getInputLength());
+                boolean matched = generateParams.getStoppingCriteriaList()
+                        .criteria(inputTokens, userContext.getScores());
+                if (matched) {
+                    token.updateFinishReason(FinishReason.STOP);
+                    finished = true;
+                    userContext.addPastTokensSize(1);
+                    return token;
+                }
             }
             if (generateTokens.size() > userContext.getMaxNewTokensSize()) {
                 token.updateFinishReason(FinishReason.LENGTH);

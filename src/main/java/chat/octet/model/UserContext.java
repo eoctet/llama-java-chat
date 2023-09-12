@@ -30,8 +30,10 @@ public class UserContext implements Serializable {
     private int maxNewTokensSize;
     @Getter
     private final long createtime;
+    private float[][] scores;
+    private final boolean isLogitsAll;
 
-    public UserContext(String id, int contextSize, int vocabSize) {
+    public UserContext(String id, int contextSize, int vocabSize, boolean isLogitsAll) {
         this.id = id;
         this.contextSize = contextSize;
         this.vocabSize = vocabSize;
@@ -42,6 +44,8 @@ public class UserContext implements Serializable {
         this.tokenDataArrays = (LlamaLibrary.llama_token_data[]) tokenData.toArray(vocabSize);
         this.candidates = new LlamaLibrary.llama_token_data_array();
         this.createtime = System.currentTimeMillis();
+        this.scores = new float[contextSize][vocabSize];
+        this.isLogitsAll = isLogitsAll;
     }
 
     public int getInputLength() {
@@ -95,8 +99,31 @@ public class UserContext implements Serializable {
         int[] newTokensBuffer = ArrayUtils.subarray(inputBuffer, keepSize, inputBuffer.length);
         Arrays.fill(inputBuffer, 0);
         System.arraycopy(newTokensBuffer, 0, inputBuffer, 0, newTokensBuffer.length);
+
+        float[][] newScores = ArrayUtils.subarray(scores, keepSize, scores.length);
+        scores = new float[contextSize][vocabSize];
+        System.arraycopy(newScores, 0, scores, 0, newScores.length);
+
         pastTokensSize.set(keepSize);
         inputLength.set(keepSize);
+    }
+
+    public void saveScores(float[] values) {
+        int start = isLogitsAll ? getPastTokensSize() : 0;
+        int end = isLogitsAll ? getInputLength() : 1;
+        for (int i = start; i < end; i++) {
+            System.arraycopy(values, 0, scores[i], 0, values.length);
+        }
+    }
+
+    public void updateScores(float[] values) {
+        int index = isLogitsAll ? getInputLength() - 1 : 0;
+        System.arraycopy(values, 0, scores[index], 0, values.length);
+    }
+
+    public float[] getScores() {
+        int index = isLogitsAll ? Math.max(getPastTokensSize() - 1, 0) : 0;
+        return ArrayUtils.subarray(scores[index], 0, scores[index].length);
     }
 
     public void destory() {
@@ -106,6 +133,7 @@ public class UserContext implements Serializable {
         this.tokenData = null;
         this.tokenDataArrays = null;
         this.candidates = null;
+        this.scores = null;
     }
 
     @Override

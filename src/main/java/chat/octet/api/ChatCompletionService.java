@@ -9,6 +9,9 @@ import chat.octet.model.UserContext;
 import chat.octet.model.UserContextManager;
 import chat.octet.model.beans.FinishReason;
 import chat.octet.model.beans.Token;
+import chat.octet.model.criteria.StoppingCriteria;
+import chat.octet.model.criteria.StoppingCriteriaList;
+import chat.octet.model.criteria.impl.MaxTimeCriteria;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.CommonUtils;
@@ -28,6 +31,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -70,7 +74,7 @@ public class ChatCompletionService implements AutoCloseable {
                     String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(input);
                     GenerateParameter generateParams = getGenerateParameter(requestParams);
-                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model.getContextSize(), model.getVocabSize());
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model);
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(userContext, text, generateParams, true);
@@ -115,7 +119,7 @@ public class ChatCompletionService implements AutoCloseable {
                     String id = CommonUtils.randomString("octetcmpl");
                     String text = PromptBuilder.toPrompt(requestParams.getPrompt(), requestParams.getInput());
                     GenerateParameter generateParams = getGenerateParameter(requestParams);
-                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model.getContextSize(), model.getVocabSize());
+                    UserContext userContext = UserContextManager.getInstance().createUserContext(requestParams.getUser(), model);
 
                     if (!requestParams.isStream()) {
                         ChatCompletionData data = generateCompletionData(userContext, text, generateParams, false);
@@ -163,11 +167,13 @@ public class ChatCompletionService implements AutoCloseable {
     }
 
     private GenerateParameter getGenerateParameter(ChatCompletionRequestParameter params) {
+        StoppingCriteria maxTimeStop = new MaxTimeCriteria(TimeUnit.MINUTES.toMillis(3));
+        StoppingCriteriaList stopping = new StoppingCriteriaList(Lists.newArrayList(maxTimeStop));
+
         return GenerateParameter.builder()
                 .temperature(Optional.ofNullable(params.getTemperature()).orElse(DEFAULT_PARAMETER.getTemperature()))
                 .topK(Optional.ofNullable(params.getTopK()).orElse(DEFAULT_PARAMETER.getTopK()))
                 .topP(Optional.ofNullable(params.getTopP()).orElse(DEFAULT_PARAMETER.getTopP()))
-                .stopWords(params.getStopWords())
                 .maxNewTokensSize(Optional.ofNullable(params.getMaxNewTokensSize()).orElse(DEFAULT_PARAMETER.getMaxNewTokensSize()))
                 .frequencyPenalty(Optional.ofNullable(params.getFrequencyPenalty()).orElse(DEFAULT_PARAMETER.getFrequencyPenalty()))
                 .presencePenalty(Optional.ofNullable(params.getPresencePenalty()).orElse(DEFAULT_PARAMETER.getPresencePenalty()))
@@ -175,6 +181,7 @@ public class ChatCompletionService implements AutoCloseable {
                 .mirostatMode(Optional.ofNullable(params.getMirostatMode()).orElse(DEFAULT_PARAMETER.getMirostatMode()))
                 .mirostatETA(Optional.ofNullable(params.getMirostatETA()).orElse(DEFAULT_PARAMETER.getMirostatETA()))
                 .mirostatTAU(Optional.ofNullable(params.getMirostatTAU()).orElse(DEFAULT_PARAMETER.getMirostatTAU()))
+                .stoppingCriteriaList(stopping)
                 .build();
     }
 

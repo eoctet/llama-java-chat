@@ -1,11 +1,12 @@
 package chat.octet.model.parameters;
 
+import chat.octet.model.criteria.StoppingCriteriaList;
+import chat.octet.model.processor.LogitsProcessorList;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * Sampling parameters<br/>
@@ -123,13 +124,6 @@ public final class GenerateParameter {
     private String suffix;
 
     /**
-     * <b>stopping words</b><br/>
-     * Custom stopping words
-     */
-    @Nullable
-    private List<String> stopWords;
-
-    /**
      * <b>verbose prompt</b><br/>
      * Print the prompt before generating text.
      */
@@ -142,6 +136,18 @@ public final class GenerateParameter {
      */
     @Builder.Default
     private int keepContextTokensSize = 1024;
+
+    /**
+     * <b>logits processor list</b><br/>
+     */
+    @Nullable
+    private LogitsProcessorList logitsProcessorList;
+
+    /**
+     * <b>stopping criteria list</b><br/>
+     */
+    @Nullable
+    private StoppingCriteriaList stoppingCriteriaList;
 
     /**
      * Mirostat sampling mode define
