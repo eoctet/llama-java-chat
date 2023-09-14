@@ -15,13 +15,13 @@ import java.util.List;
 @Slf4j
 public final class Generator implements Iterator<Token> {
 
-    private final LlamaModel model;
+    private final ModelHandler model;
     private final GenerateParameter generateParams;
     private final List<Token> generateTokens;
     private boolean finished = false;
     private final UserContext userContext;
 
-    public Generator(LlamaModel model, GenerateParameter generateParams, UserContext userContext, String text) {
+    public Generator(ModelHandler model, GenerateParameter generateParams, UserContext userContext, String text) {
         this.model = model;
         this.generateParams = generateParams;
         this.userContext = userContext;

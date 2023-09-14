@@ -17,14 +17,13 @@ import java.util.Objects;
 @ToString
 public final class Token implements Serializable {
     private final int id;
-    private final float logprobs;
+    //private final float logprobs;
     private final long elapsed;
     private final String text;
     private FinishReason finishReason;
 
-    public Token(int id, float logprobs, long elapsed, String text) {
+    public Token(int id, long elapsed, String text) {
         this.id = id;
-        this.logprobs = logprobs;
         this.elapsed = System.currentTimeMillis() - elapsed;
         this.text = text;
         this.finishReason = FinishReason.NONE;

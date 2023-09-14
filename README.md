@@ -7,7 +7,7 @@ Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggergan
 #### Main content
 - 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
 - 🚀 Supported:
-  - [X] OpenAPI (some sampling parameters have been adjusted to Llama2)
+  - [X] OpenAPI (Some sampling parameters are adjusted to Llama2)
   - [X] Multi-user sessions
   - [X] Cloud deployment
   - [X] CLI interaction
@@ -32,7 +32,7 @@ public class ConsoleQA {
                 .build();
 
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-             LlamaModel model = new LlamaModel(modelParams)) {
+             ModelHandler model = new ModelHandler(modelParams)) {
 
             GenerateParameter generateParams = GenerateParameter.builder().build();
             String system = "Answer the questions.";

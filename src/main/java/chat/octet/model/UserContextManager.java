@@ -29,11 +29,11 @@ public final class UserContextManager {
         return manager;
     }
 
-    public UserContext getDefaultUserContext(LlamaModel model) {
+    public UserContext getDefaultUserContext(ModelHandler model) {
         return createUserContext(model, DEFAULT_USER_ID);
     }
 
-    public UserContext createUserContext(LlamaModel model, String id) {
+    public UserContext createUserContext(ModelHandler model, String id) {
         boolean exists = USER_CONTEXT_CACHE.containsKey(id);
         if (!exists) {
             if (USER_CONTEXT_CACHE.size() > USER_CONTEXT_LIMIT) {

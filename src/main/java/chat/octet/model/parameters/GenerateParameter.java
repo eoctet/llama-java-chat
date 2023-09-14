@@ -98,7 +98,7 @@ public final class GenerateParameter {
      * Set the Mirostat target entropy, parameter tau (default: 5.0).
      */
     @Builder.Default
-    private float mirostatTAU = 5.0f;
+    private Float mirostatTAU = 5.0f;
 
     /**
      * <b>grammars</b><br/>

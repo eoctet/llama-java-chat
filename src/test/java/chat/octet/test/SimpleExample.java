@@ -1,6 +1,6 @@
 package chat.octet.test;
 
-import chat.octet.model.LlamaModel;
+import chat.octet.model.ModelHandler;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.PromptBuilder;
@@ -23,7 +23,7 @@ public class SimpleExample {
 
         GenerateParameter generateParams = GenerateParameter.builder().build();
 
-        try (LlamaModel model = new LlamaModel(modelParams)) {
+        try (ModelHandler model = new ModelHandler(modelParams)) {
             model.generate(generateParams, text).forEach(e -> System.out.print(e.getText()));
         }
     }
