@@ -10,7 +10,10 @@ public class LlamaLibService {
 
     static {
         System.loadLibrary("llama");
+        initLocal();
     }
+
+    public static native void initLocal();
 
     public static native LlamaContextParams getLlamaContextDefaultParams();
 
