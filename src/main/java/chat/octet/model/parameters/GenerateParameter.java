@@ -79,6 +79,13 @@ public final class GenerateParameter {
     private float tsf = 1.0f;
 
     /**
+     * <b>Typical Sampling</b><br/>
+     * Enable typical sampling sampling with parameter p (default: 1.0, 1.0 = disabled).
+     */
+    @Builder.Default
+    private float typical = 1.0f;
+
+    /**
      * <b>Mirostat Sampling</b><br/>
      * Enable Mirostat sampling, controlling perplexity during text generation
      * (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0).

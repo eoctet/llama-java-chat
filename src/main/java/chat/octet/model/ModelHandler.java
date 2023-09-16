@@ -285,7 +285,7 @@ public class ModelHandler implements AutoCloseable {
                             topK,
                             generateParams.getTopP(),
                             generateParams.getTsf(),
-                            1.0f,
+                            generateParams.getTypical(),
                             1
                     );
                     break;

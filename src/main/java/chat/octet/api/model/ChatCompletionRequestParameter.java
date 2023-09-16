@@ -40,6 +40,12 @@ public class ChatCompletionRequestParameter {
     @JsonProperty("top_p")
     private Float topP;
 
+    @JsonProperty("tfs_z")
+    private Float tfs;
+
+    @JsonProperty("typical_p")
+    private Float typical;
+
     @JsonProperty("stream")
     private boolean stream;
 
@@ -71,12 +77,12 @@ public class ChatCompletionRequestParameter {
     private Integer logprobs;
 
     @JsonProperty("logit_bias")
-    private Map<String, Float> logitBias;
-
-    @JsonProperty("logit_bias_type")
-    private List<String> logitBiasType;
+    private Map<Integer, String> logitBias;
 
     @JsonProperty("verbose")
     private boolean verbose;
+
+    @JsonProperty("timeout")
+    private Long timeout;
 
 }
