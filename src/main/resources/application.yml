@@ -1,6 +1,6 @@
 # api config
 server:
-  port: 8080
+  port: 8152
   shutdown: graceful
 swagger:
   enabled: true
