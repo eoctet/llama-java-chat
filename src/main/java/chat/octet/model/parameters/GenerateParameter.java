@@ -124,13 +124,6 @@ public final class GenerateParameter {
     private int maxNewTokensSize = 0;
 
     /**
-     * <b>suffix</b><br/>
-     * flag is used to add a suffix after your input.
-     */
-    @Nullable
-    private String suffix;
-
-    /**
      * <b>verbose prompt</b><br/>
      * Print the prompt before generating text.
      */

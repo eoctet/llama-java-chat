@@ -36,7 +36,8 @@ public class UserContext implements Serializable {
         this.inputLength = new AtomicInteger(0);
         this.pastTokensSize = new AtomicInteger(0);
         this.createtime = System.currentTimeMillis();
-        this.scores = new float[contextSize][vocabSize];
+        int length = isLogitsAll ? contextSize : 1;
+        this.scores = new float[length][vocabSize];
         this.isLogitsAll = isLogitsAll;
     }
 
@@ -79,7 +80,8 @@ public class UserContext implements Serializable {
         System.arraycopy(newTokensBuffer, 0, inputIds, 0, newTokensBuffer.length);
 
         float[][] newScores = ArrayUtils.subarray(scores, keepSize, scores.length);
-        scores = new float[contextSize][vocabSize];
+        int length = isLogitsAll ? contextSize : 1;
+        scores = new float[length][vocabSize];
         System.arraycopy(newScores, 0, scores, 0, newScores.length);
 
         pastTokensSize.set(keepSize);

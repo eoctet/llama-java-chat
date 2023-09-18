@@ -62,7 +62,7 @@ public class ChatCompletionService implements AutoCloseable {
     @Bean
     public RouterFunction<ServerResponse> chatCompletionsFunction() {
         return RouterFunctions.route(
-                RequestPredicates.POST("/v1/chat/completions").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
+                RequestPredicates.POST("/v1/chat/completions").and(RequestPredicates.accept(MediaType.TEXT_EVENT_STREAM)),
                 serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
                     long startTime = System.currentTimeMillis();
                     List<ChatMessage> messages = requestParams.getMessages();
@@ -71,20 +71,30 @@ public class ChatCompletionService implements AutoCloseable {
                                 .body(BodyInserters.fromValue("Request parameter 'messages' cannot be empty"));
                     }
 
-                    List<String> contents = Lists.newArrayList();
-                    String system = null;
-                    if (messages.size() > 1 && messages.get(0).getRole() == ChatMessage.ChatRole.SYSTEM) {
-                        system = messages.get(0).getContent();
-                    }
-                    for (ChatMessage message : messages) {
-                        if (ChatMessage.ChatRole.USER == message.getRole()) {
-                            contents.add(message.getContent());
+                    StringBuilder buffer = new StringBuilder();
+                    for (int i = 0; i < messages.size(); i++) {
+                        ChatMessage message = messages.get(i);
+                        int nextIndex = Math.min(i + 1, messages.size() - 1);
+                        ChatMessage nextMessage = messages.get(nextIndex);
+                        if (message.getRole() == ChatMessage.ChatRole.SYSTEM && nextMessage.getRole() == ChatMessage.ChatRole.USER) {
+                            String system = message.getContent();
+                            String content = nextMessage.getContent();
+                            String prompt = PromptBuilder.toPrompt(system, content);
+                            buffer.append(prompt);
+                            i++;
+                            continue;
+                        }
+                        if (message.getRole() == ChatMessage.ChatRole.USER) {
+                            String content = message.getContent();
+                            String prompt = PromptBuilder.toPrompt(content);
+                            buffer.append(prompt);
+                        }
+                        if (message.getRole() == ChatMessage.ChatRole.ASSISTANT) {
+                            String content = message.getContent();
+                            buffer.append(content).append("</s>\n");
                         }
                     }
-                    String input = StringUtils.join(contents, "\n");
-
-                    String prompt = PromptBuilder.toPrompt(system, input);
-                    return doCompletions(requestParams, prompt, startTime, true);
+                    return doCompletions(requestParams, buffer.toString(), startTime, true);
                 })
         );
     }
@@ -147,7 +157,7 @@ public class ChatCompletionService implements AutoCloseable {
     @Bean
     public RouterFunction<ServerResponse> resetFunction() {
         return RouterFunctions.route(
-                RequestPredicates.GET("/v1/reset").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
+                RequestPredicates.POST("/v1/reset").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
                     if ("ALL".equalsIgnoreCase(requestParams.getUser())) {
                         UserContextManager.getInstance().removeAllUsersContext();

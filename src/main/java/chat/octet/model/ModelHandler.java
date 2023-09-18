@@ -107,12 +107,18 @@ public class ModelHandler implements AutoCloseable {
         this.llamaContextParams.f16KV = modelParams.isF16KV();
         this.llamaContextParams.logitsAll = modelParams.isLogitsAll();
         this.llamaContextParams.vocabOnly = modelParams.isVocabOnly();
-        this.llamaContextParams.mmap = (StringUtils.isBlank(modelParams.getLoraPath()) && modelParams.isMmap());
-        this.llamaContextParams.mlock = modelParams.isMlock();
         this.llamaContextParams.embedding = modelParams.isEmbedding();
         this.llamaContextParams.lowVram = modelParams.isLowVram();
         this.llamaContextParams.ropeFreqBase = modelParams.getRopeFreqBase();
         this.llamaContextParams.ropeFreqScale = modelParams.getRopeFreqScale();
+        boolean mmap = (StringUtils.isBlank(modelParams.getLoraPath()) && modelParams.isMmap());
+        if (mmap && LlamaLibService.isMmapSupported()) {
+            this.llamaContextParams.mmap = true;
+        }
+        boolean mlock = modelParams.isMlock();
+        if (mlock && LlamaLibService.isMlockSupported()) {
+            this.llamaContextParams.mlock = true;
+        }
         if (modelParams.getMainGpu() != null) {
             this.llamaContextParams.mainGpu = modelParams.getMainGpu();
         }
