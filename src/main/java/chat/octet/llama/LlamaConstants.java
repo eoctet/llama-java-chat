@@ -12,11 +12,11 @@ public class LlamaConstants {
     public static final int LLAMA_GRETYPE_CHAR_ALT = 6;
 
     //LLAMA_TOKEN_TYPE
-    int LLAMA_TOKEN_TYPE_UNDEFINED = 0;
-    int LLAMA_TOKEN_TYPE_NORMAL = 1;
-    int LLAMA_TOKEN_TYPE_UNKNOWN = 2;
-    int LLAMA_TOKEN_TYPE_CONTROL = 3;
-    int LLAMA_TOKEN_TYPE_USER_DEFINED = 4;
-    int LLAMA_TOKEN_TYPE_UNUSED = 5;
-    int LLAMA_TOKEN_TYPE_BYTE = 6;
+    public static final int LLAMA_TOKEN_TYPE_UNDEFINED = 0;
+    public static final int LLAMA_TOKEN_TYPE_NORMAL = 1;
+    public static final int LLAMA_TOKEN_TYPE_UNKNOWN = 2;
+    public static final int LLAMA_TOKEN_TYPE_CONTROL = 3;
+    public static final int LLAMA_TOKEN_TYPE_USER_DEFINED = 4;
+    public static final int LLAMA_TOKEN_TYPE_UNUSED = 5;
+    public static final int LLAMA_TOKEN_TYPE_BYTE = 6;
 }
