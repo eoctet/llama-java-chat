@@ -30,6 +30,7 @@ import java.util.Iterator;
 public class ModelHandler implements AutoCloseable {
 
     private final LlamaModel model;
+    @Getter
     private final LlamaContext llamaContext;
     private final LlamaContextParams llamaContextParams;
 
@@ -188,17 +189,11 @@ public class ModelHandler implements AutoCloseable {
 
     public int[] tokenize(String text, boolean addBos) {
         int[] tokens = new int[getContextSize()];
-        int nextTokens = LlamaLibService.tokenizeWithModel(model, text, tokens, getContextSize(), addBos);
+        int nextTokens = LlamaLibService.tokenizeWithModel(model, text.getBytes(StandardCharsets.UTF_8), tokens, getContextSize(), addBos);
         if (nextTokens < 0) {
             throw new ModelException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
         return ArrayUtils.subarray(tokens, 0, nextTokens);
-    }
-
-    public String decodeToken(int token) {
-        byte[] buffer = new byte[64];
-        int size = LlamaLibService.getTokenToPiece(llamaContext, token, buffer, buffer.length);
-        return new String(buffer, 0, size, StandardCharsets.UTF_8);
     }
 
     protected int evaluate(int[] inputIds, int pastTokensSize, int inputLength) {
@@ -223,8 +218,7 @@ public class ModelHandler implements AutoCloseable {
         return evaluateTotalSize;
     }
 
-    protected Token sampling(GenerateParameter generateParams, float[] logits, int[] inputIds, int inputLength) {
-        long timestamp = System.currentTimeMillis();
+    protected int sampling(GenerateParameter generateParams, float[] logits, int[] inputIds, int inputLength) {
         LlamaTokenDataArray candidates = createEmptyCandidates(logits);
 
         int startIndex = Math.max(0, inputLength - getLastTokensSize());
@@ -297,7 +291,7 @@ public class ModelHandler implements AutoCloseable {
                     break;
             }
         }
-        return new Token(tokenId, timestamp, decodeToken(tokenId));
+        return tokenId;
     }
 
     @Override

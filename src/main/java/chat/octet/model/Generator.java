@@ -20,11 +20,13 @@ public final class Generator implements Iterator<Token> {
     private final List<Token> generateTokens;
     private boolean finished = false;
     private final UserContext userContext;
+    private final AutoDecoder decoder;
 
     public Generator(ModelHandler model, GenerateParameter generateParams, UserContext userContext, String text) {
         this.model = model;
         this.generateParams = generateParams;
         this.userContext = userContext;
+        this.decoder = new AutoDecoder(model);
 
         int[] tokens = StringUtils.isNotBlank(text) ? model.tokenize(text, true) : new int[]{model.getTokenBOS()};
         if (tokens.length >= model.getContextSize()) {
@@ -95,7 +97,9 @@ public final class Generator implements Iterator<Token> {
             userContext.updateScores(logits);
         }
         //do sampling
-        Token token = model.sampling(generateParams, logits, userContext.getInput(), userContext.getInputLength());
+        long timestamp = System.currentTimeMillis();
+        int tokenId = model.sampling(generateParams, logits, userContext.getInput(), userContext.getInputLength());
+        Token token = new Token(tokenId, timestamp, decoder.decodeToken(tokenId));
         //Save new token to the list
         generateTokens.add(token);
         if (userContext.getInputLength() + 1 > model.getContextSize()) {

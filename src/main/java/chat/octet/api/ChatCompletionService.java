@@ -4,6 +4,7 @@ import chat.octet.api.model.ChatCompletionChunk;
 import chat.octet.api.model.ChatCompletionData;
 import chat.octet.api.model.ChatCompletionRequestParameter;
 import chat.octet.api.model.ChatMessage;
+import chat.octet.model.AutoDecoder;
 import chat.octet.model.ModelHandler;
 import chat.octet.model.UserContext;
 import chat.octet.model.UserContextManager;
@@ -20,7 +21,6 @@ import chat.octet.utils.PromptBuilder;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +51,7 @@ public class ChatCompletionService implements AutoCloseable {
 
     private static final ModelParameter modelParams = ModelParameter.builder()
             .modelPath(MODEL_PATH)
-            .threads(8)
+            .threads(6)
             .contextSize(4096)
             .verbose(true)
             .lastNTokensSize(256)
@@ -109,7 +109,7 @@ public class ChatCompletionService implements AutoCloseable {
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
                                 .body(BodyInserters.fromValue("Request parameter 'input' cannot be empty"));
                     }
-                    String text = PromptBuilder.toPrompt(requestParams.getPrompt(), requestParams.getInput());
+                    String text = StringUtils.join(requestParams.getPrompt(), "\n\n", requestParams.getInput());
                     return doCompletions(requestParams, text, startTime, false);
                 })
         );
@@ -120,7 +120,7 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/tokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(String.class).flatMap(content -> {
-                    int[] tokens = model.tokenize(content, true);
+                    int[] tokens = model.tokenize(content, false);
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(tokens));
                 })
         );
@@ -131,11 +131,10 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/detokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(List.class).flatMap(tokens -> {
-                    List<Pair<String, String>> response = Lists.newArrayList();
-                    for (Object token : tokens) {
-                        response.add(Pair.of(String.valueOf(token), model.decodeToken(Integer.parseInt(String.valueOf(token)))));
-                    }
-                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(response));
+                    AutoDecoder decoder = new AutoDecoder(model);
+                    int[] arrays = tokens.stream().mapToInt((Object i) -> Integer.parseInt(i.toString())).toArray();
+                    String text = decoder.decodeToken(arrays);
+                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(text));
                 })
         );
     }
