@@ -20,20 +20,17 @@ public class AutoDecoder {
     }
 
     public String decodeToken(int token) {
-        byte[] buffer = new byte[32];
+        byte[] buffer = new byte[64];
         int size = LlamaLibService.getTokenToPiece(model.getLlamaContext(), token, buffer, buffer.length);
         byte code = buffer[0];
 
         if (size == 1 && !Character.isValidCodePoint(code)) {
             if (length == 0) {
                 length = getUtf8ByteLength(code);
-                if (length == -1) {
-                    throw new IllegalArgumentException("Illegal token byte, byte code is " + code);
-                }
             }
             tokenBytesBuffer[index] = code;
             index++;
-            if (index >= length) {
+            if (index == length) {
                 String text = new String(tokenBytesBuffer, 0, length, StandardCharsets.UTF_8);
                 index = 0;
                 length = 0;
@@ -46,10 +43,10 @@ public class AutoDecoder {
     }
 
     public String decodeToken(int... tokens) {
-        byte[] buffer = new byte[tokens.length * 32];
+        byte[] buffer = new byte[tokens.length * 64];
         int length = 0;
         for (int token : tokens) {
-            byte[] bytes = new byte[32];
+            byte[] bytes = new byte[64];
             int size = LlamaLibService.getTokenToPiece(model.getLlamaContext(), token, bytes, bytes.length);
             System.arraycopy(bytes, 0, buffer, length, size);
             length += size;
@@ -68,7 +65,7 @@ public class AutoDecoder {
         } else if (topBits >= 0xF0 && topBits <= 0xF7) {
             return 4;
         } else {
-            return -1;
+            throw new IllegalArgumentException("Illegal token byte, byte code is " + bytes);
         }
     }
 }
