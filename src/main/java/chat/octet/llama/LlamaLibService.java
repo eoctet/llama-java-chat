@@ -69,9 +69,9 @@ public class LlamaLibService {
 
     public static native int getTokenNL(LlamaContext ctx);
 
-    public static native int tokenize(LlamaContext ctx, byte[] buf, int[] tokens, int maxTokens, boolean addBos);
+    public static native int tokenize(LlamaContext ctx, byte[] buf, int textLength, int[] tokens, int maxTokens, boolean addBos);
 
-    public static native int tokenizeWithModel(LlamaModel model, byte[] buf, int[] tokens, int maxTokens, boolean addBos);
+    public static native int tokenizeWithModel(LlamaModel model, byte[] buf, int textLength, int[] tokens, int maxTokens, boolean addBos);
 
     public static native int getTokenToPiece(LlamaContext ctx, int token, byte[] buf, int length);
 

@@ -189,7 +189,8 @@ public class ModelHandler implements AutoCloseable {
 
     public int[] tokenize(String text, boolean addBos) {
         int[] tokens = new int[getContextSize()];
-        int nextTokens = LlamaLibService.tokenizeWithModel(model, text.getBytes(StandardCharsets.UTF_8), tokens, getContextSize(), addBos);
+        byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
+        int nextTokens = LlamaLibService.tokenizeWithModel(model, textBytes, textBytes.length, tokens, getContextSize(), addBos);
         if (nextTokens < 0) {
             throw new ModelException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
