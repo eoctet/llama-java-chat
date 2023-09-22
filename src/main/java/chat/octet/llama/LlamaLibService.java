@@ -5,11 +5,12 @@ import chat.octet.llama.beans.LlamaContext;
 import chat.octet.llama.beans.LlamaContextParams;
 import chat.octet.llama.beans.LlamaModel;
 import chat.octet.llama.beans.LlamaTokenDataArray;
+import chat.octet.utils.Platform;
 
 public class LlamaLibService {
 
     static {
-        System.loadLibrary("llama");
+        System.load(Platform.LIB_RESOURCE_PATH);
         initLocal();
     }
 
