@@ -15,14 +15,14 @@ import java.util.List;
 @Slf4j
 public final class Generator implements Iterator<Token> {
 
-    private final ModelHandler model;
+    private final Model model;
     private final GenerateParameter generateParams;
     private final List<Token> generateTokens;
     private boolean finished = false;
     private final UserContext userContext;
     private final AutoDecoder decoder;
 
-    public Generator(ModelHandler model, GenerateParameter generateParams, UserContext userContext, String text) {
+    public Generator(Model model, GenerateParameter generateParams, UserContext userContext, String text) {
         this.model = model;
         this.generateParams = generateParams;
         this.userContext = userContext;

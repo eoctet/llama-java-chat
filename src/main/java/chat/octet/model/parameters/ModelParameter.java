@@ -1,6 +1,6 @@
 package chat.octet.model.parameters;
 
-import chat.octet.llama.beans.LlamaContextParams;
+import chat.octet.model.beans.LlamaContextParams;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;

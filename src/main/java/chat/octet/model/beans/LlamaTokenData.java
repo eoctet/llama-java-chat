@@ -1,4 +1,4 @@
-package chat.octet.llama.beans;
+package chat.octet.model.beans;
 
 
 public class LlamaTokenData {

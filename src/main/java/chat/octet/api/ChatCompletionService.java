@@ -5,7 +5,7 @@ import chat.octet.api.model.ChatCompletionData;
 import chat.octet.api.model.ChatCompletionRequestParameter;
 import chat.octet.api.model.ChatMessage;
 import chat.octet.model.AutoDecoder;
-import chat.octet.model.ModelHandler;
+import chat.octet.model.Model;
 import chat.octet.model.UserContext;
 import chat.octet.model.UserContextManager;
 import chat.octet.model.beans.FinishReason;
@@ -57,7 +57,7 @@ public class ChatCompletionService implements AutoCloseable {
             .lastNTokensSize(256)
             .build();
 
-    private final static ModelHandler model = new ModelHandler(modelParams);
+    private final static Model model = new Model(modelParams);
 
     @Bean
     public RouterFunction<ServerResponse> chatCompletionsFunction() {

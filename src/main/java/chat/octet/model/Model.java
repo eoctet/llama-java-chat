@@ -2,9 +2,7 @@ package chat.octet.model;
 
 
 import chat.octet.exceptions.ModelException;
-import chat.octet.llama.LlamaLibService;
-import chat.octet.llama.beans.*;
-import chat.octet.model.beans.Token;
+import chat.octet.model.beans.*;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.CommonUtils;
@@ -27,9 +25,9 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Slf4j
-public class ModelHandler implements AutoCloseable {
+public class Model implements AutoCloseable {
 
-    private final LlamaModel model;
+    private final LlamaModel llamaModel;
     @Getter
     private final LlamaContext llamaContext;
     private final LlamaContextParams llamaContextParams;
@@ -54,7 +52,7 @@ public class ModelHandler implements AutoCloseable {
     @Getter
     private final int lastTokensSize;
 
-    public ModelHandler(ModelParameter modelParams) {
+    public Model(ModelParameter modelParams) {
         Preconditions.checkNotNull(modelParams, "Model parameters cannot be null");
         Preconditions.checkNotNull(modelParams.getModelPath(), "Model file path cannot be null");
 
@@ -65,11 +63,11 @@ public class ModelHandler implements AutoCloseable {
         this.modelParams = modelParams;
 
         //setting context parameters
-        this.llamaContextParams = LlamaLibService.getLlamaContextDefaultParams();
+        this.llamaContextParams = LlamaService.getLlamaContextDefaultParams();
         settingLlamaContextParameters(modelParams);
 
-        this.model = LlamaLibService.loadLlamaModelFromFile(modelParams.getModelPath(), this.llamaContextParams);
-        if (this.model == null) {
+        this.llamaModel = LlamaService.loadLlamaModelFromFile(modelParams.getModelPath(), this.llamaContextParams);
+        if (this.llamaModel == null) {
             throw new ModelException("Load model failed");
         }
 
@@ -78,24 +76,24 @@ public class ModelHandler implements AutoCloseable {
             if (!Files.exists(new File(modelParams.getLoraPath()).toPath())) {
                 throw new ModelException("Lora model file is not exists, please check the file path");
             }
-            int status = LlamaLibService.loadLoraModelFromFile(model, modelParams.getLoraPath(), modelParams.getLoraBase(), modelParams.getThreads());
+            int status = LlamaService.loadLoraModelFromFile(llamaModel, modelParams.getLoraPath(), modelParams.getLoraBase(), modelParams.getThreads());
             if (status != 0) {
                 throw new ModelException(String.format("Failed to apply LoRA from lora path: %s to base path: %s", modelParams.getLoraPath(), modelParams.getLoraBase()));
             }
         }
 
-        this.llamaContext = LlamaLibService.createNewContextWithModel(model, this.llamaContextParams);
-        this.contextSize = LlamaLibService.getContextSize(llamaContext);
+        this.llamaContext = LlamaService.createNewContextWithModel(llamaModel, this.llamaContextParams);
+        this.contextSize = LlamaService.getContextSize(llamaContext);
         //this.embeddingSize = LlamaLibService.llama_n_embd(llamaContext);
-        this.vocabSize = LlamaLibService.getVocabSize(llamaContext);
-        this.tokenBOS = LlamaLibService.getTokenBOS(llamaContext);
-        this.tokenEOS = LlamaLibService.getTokenEOS(llamaContext);
-        this.tokenNL = LlamaLibService.getTokenNL(llamaContext);
+        this.vocabSize = LlamaService.getVocabSize(llamaContext);
+        this.tokenBOS = LlamaService.getTokenBOS(llamaContext);
+        this.tokenEOS = LlamaService.getTokenEOS(llamaContext);
+        this.tokenNL = LlamaService.getTokenNL(llamaContext);
         this.batchSize = modelParams.getBatchSize();
         this.lastTokensSize = modelParams.getLastNTokensSize() < 0 ? contextSize : modelParams.getLastNTokensSize();
 
         if (modelParams.isVerbose()) {
-            String systemInfo = LlamaLibService.printSystemInfo();
+            String systemInfo = LlamaService.printSystemInfo();
             log.info(CommonUtils.format("system info: {0}", systemInfo));
         }
         log.info(CommonUtils.format("model parameters: {0}", modelParams));
@@ -113,11 +111,11 @@ public class ModelHandler implements AutoCloseable {
         this.llamaContextParams.ropeFreqBase = modelParams.getRopeFreqBase();
         this.llamaContextParams.ropeFreqScale = modelParams.getRopeFreqScale();
         boolean mmap = (StringUtils.isBlank(modelParams.getLoraPath()) && modelParams.isMmap());
-        if (mmap && LlamaLibService.isMmapSupported()) {
+        if (mmap && LlamaService.isMmapSupported()) {
             this.llamaContextParams.mmap = true;
         }
         boolean mlock = modelParams.isMlock();
-        if (mlock && LlamaLibService.isMlockSupported()) {
+        if (mlock && LlamaService.isMlockSupported()) {
             this.llamaContextParams.mlock = true;
         }
         if (modelParams.getMainGpu() != null) {
@@ -140,7 +138,7 @@ public class ModelHandler implements AutoCloseable {
     }
 
     public float[] getDefaultLogits() {
-        return LlamaLibService.getLogits(llamaContext);
+        return LlamaService.getLogits(llamaContext);
     }
 
     public Iterable<Token> generate(GenerateParameter generateParams, String text) {
@@ -153,7 +151,7 @@ public class ModelHandler implements AutoCloseable {
         Preconditions.checkNotNull(text, "Text cannot be null");
         Preconditions.checkNotNull(generateParams, "Generate parameter cannot be null");
 
-        final ModelHandler model = this;
+        final Model model = this;
         return new Iterable<Token>() {
 
             private Generator generator = null;
@@ -171,7 +169,7 @@ public class ModelHandler implements AutoCloseable {
 
     public void printTimings() {
         if (modelParams.isVerbose()) {
-            LlamaLibService.printTimings(llamaContext);
+            LlamaService.printTimings(llamaContext);
         }
     }
 
@@ -182,7 +180,7 @@ public class ModelHandler implements AutoCloseable {
         int[] tokens = tokenize(new String(text.getBytes(StandardCharsets.UTF_8)), true);
         //
         evaluate(tokens, 0, tokens.length);
-        float[] embedding = LlamaLibService.getEmbeddings(llamaContext);
+        float[] embedding = LlamaService.getEmbeddings(llamaContext);
         printTimings();
         return embedding;
     }
@@ -190,7 +188,7 @@ public class ModelHandler implements AutoCloseable {
     public int[] tokenize(String text, boolean addBos) {
         int[] tokens = new int[getContextSize()];
         byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
-        int nextTokens = LlamaLibService.tokenizeWithModel(model, textBytes, textBytes.length, tokens, getContextSize(), addBos);
+        int nextTokens = LlamaService.tokenizeWithModel(llamaModel, textBytes, textBytes.length, tokens, getContextSize(), addBos);
         if (nextTokens < 0) {
             throw new ModelException(String.format("failed to tokenize: %s, next_tokens: %s", text, nextTokens));
         }
@@ -209,7 +207,7 @@ public class ModelHandler implements AutoCloseable {
             int endIndex = evaluateSize + pastTokensSize;
             //
             int[] batchTokens = ArrayUtils.subarray(inputIds, pastTokensSize, endIndex);
-            int returnCode = LlamaLibService.evaluate(llamaContext, batchTokens, evaluateSize, pastTokensSize, modelParams.getThreads());
+            int returnCode = LlamaService.evaluate(llamaContext, batchTokens, evaluateSize, pastTokensSize, modelParams.getThreads());
             if (returnCode != 0) {
                 throw new ModelException("Llama_eval returned " + returnCode);
             }
@@ -227,7 +225,7 @@ public class ModelHandler implements AutoCloseable {
 
         int tokenId;
         if (generateParams.getTemperature() == 0) {
-            tokenId = LlamaLibService.samplingWithGreedy(
+            tokenId = LlamaService.samplingWithGreedy(
                     llamaContext,
                     candidates,
                     lastTokens,
@@ -241,7 +239,7 @@ public class ModelHandler implements AutoCloseable {
             switch (generateParams.getMirostatMode()) {
                 case V1:
                     int mirostatM = 100;
-                    tokenId = LlamaLibService.samplingWithMirostatV1(
+                    tokenId = LlamaService.samplingWithMirostatV1(
                             llamaContext,
                             candidates,
                             lastTokens,
@@ -257,7 +255,7 @@ public class ModelHandler implements AutoCloseable {
                     );
                     break;
                 case V2:
-                    tokenId = LlamaLibService.samplingWithMirostatV2(
+                    tokenId = LlamaService.samplingWithMirostatV2(
                             llamaContext,
                             candidates,
                             lastTokens,
@@ -274,7 +272,7 @@ public class ModelHandler implements AutoCloseable {
                 case DISABLED:
                 default:
                     int topK = generateParams.getTopK() <= 0 ? getVocabSize() : generateParams.getTopK();
-                    tokenId = LlamaLibService.sampling(
+                    tokenId = LlamaService.sampling(
                             llamaContext,
                             candidates,
                             lastTokens,
@@ -297,8 +295,8 @@ public class ModelHandler implements AutoCloseable {
 
     @Override
     public void close() {
-        LlamaLibService.releaseLlamaContext(llamaContext);
-        LlamaLibService.releaseLlamaModel(model);
+        LlamaService.releaseLlamaContext(llamaContext);
+        LlamaService.releaseLlamaModel(llamaModel);
     }
 
     @Override

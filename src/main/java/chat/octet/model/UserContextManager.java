@@ -29,11 +29,11 @@ public final class UserContextManager {
         return manager;
     }
 
-    public UserContext getDefaultUserContext(ModelHandler model) {
+    public UserContext getDefaultUserContext(Model model) {
         return createUserContext(model, DEFAULT_USER_ID);
     }
 
-    public UserContext createUserContext(ModelHandler model, String id) {
+    public UserContext createUserContext(Model model, String id) {
         boolean exists = USER_CONTEXT_CACHE.containsKey(id);
         if (!exists) {
             if (USER_CONTEXT_CACHE.size() > USER_CONTEXT_LIMIT) {

@@ -1,4 +1,4 @@
-package chat.octet.llama;
+package chat.octet.model.beans;
 
 
 public class LlamaConstants {

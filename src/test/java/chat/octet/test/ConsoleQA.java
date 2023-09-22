@@ -1,6 +1,6 @@
 package chat.octet.test;
 
-import chat.octet.model.ModelHandler;
+import chat.octet.model.Model;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.PromptBuilder;
@@ -23,7 +23,7 @@ public class ConsoleQA {
                 .build();
 
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-             ModelHandler model = new ModelHandler(modelParams)) {
+             Model model = new Model(modelParams)) {
 
             GenerateParameter generateParams = GenerateParameter.builder().build();
             String system = "Answer the questions.";

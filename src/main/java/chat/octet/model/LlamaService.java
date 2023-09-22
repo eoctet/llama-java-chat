@@ -1,13 +1,13 @@
-package chat.octet.llama;
+package chat.octet.model;
 
 
-import chat.octet.llama.beans.LlamaContext;
-import chat.octet.llama.beans.LlamaContextParams;
-import chat.octet.llama.beans.LlamaModel;
-import chat.octet.llama.beans.LlamaTokenDataArray;
+import chat.octet.model.beans.LlamaContext;
+import chat.octet.model.beans.LlamaContextParams;
+import chat.octet.model.beans.LlamaModel;
+import chat.octet.model.beans.LlamaTokenDataArray;
 import chat.octet.utils.Platform;
 
-public class LlamaLibService {
+public class LlamaService {
 
     static {
         System.load(Platform.LIB_RESOURCE_PATH);

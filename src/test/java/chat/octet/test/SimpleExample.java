@@ -1,6 +1,6 @@
 package chat.octet.test;
 
-import chat.octet.model.ModelHandler;
+import chat.octet.model.Model;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.PromptBuilder;
@@ -23,7 +23,7 @@ public class SimpleExample {
 
         GenerateParameter generateParams = GenerateParameter.builder().build();
 
-        try (ModelHandler model = new ModelHandler(modelParams)) {
+        try (Model model = new Model(modelParams)) {
             model.generate(generateParams, text).forEach(e -> System.out.print(e.getText()));
         }
     }
