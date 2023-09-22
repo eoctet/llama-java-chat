@@ -41,7 +41,7 @@ public final class UserContextManager {
             }
             UserContext userContext = new UserContext(id, model.getContextSize(), model.getVocabSize(), model.getModelParams().isLogitsAll());
             USER_CONTEXT_CACHE.put(id, userContext);
-            log.info(CommonUtils.format("Create new user context, User id: {0}, user context cache size: {1}.", userContext.getId(), USER_CONTEXT_CACHE.size()));
+            log.debug(CommonUtils.format("Create new user context, User id: {0}, user context cache size: {1}.", userContext.getId(), USER_CONTEXT_CACHE.size()));
         }
         return USER_CONTEXT_CACHE.get(id);
     }

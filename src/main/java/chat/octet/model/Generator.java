@@ -48,7 +48,7 @@ public final class Generator implements Iterator<Token> {
 
         generateTokens = Lists.newArrayList();
 
-        log.info(CommonUtils.format("Generate starting, User id: {0}, context buffer size: {1}, input tokens size: {2}.",
+        log.debug(CommonUtils.format("Generate starting, User id: {0}, context buffer size: {1}, input tokens size: {2}.",
                 userContext.getId(),
                 userContext.getInputLength(),
                 tokens.length

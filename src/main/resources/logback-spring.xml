@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <configuration scan="true" scanPeriod="60 seconds">
 
-    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-
     <property name="log.path" value="logs"/>
     <property name="max.history" value="5"/>
 

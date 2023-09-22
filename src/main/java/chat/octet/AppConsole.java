@@ -1,6 +1,5 @@
 package chat.octet;
 
-import chat.octet.exceptions.ModelException;
 import chat.octet.model.ModelHandler;
 import chat.octet.model.parameters.GenerateParameter;
 import chat.octet.model.parameters.ModelParameter;
@@ -9,8 +8,11 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppConsole {
 
@@ -32,7 +34,10 @@ public class AppConsole {
 
         String model = cmd.getOptionValue("model");
         if (StringUtils.isBlank(model)) {
-            throw new ModelException("Model file is empty, please check the file path");
+            //use the default model here?
+            Path path = Paths.get("");
+            String projectPath = path.toAbsolutePath().toString();
+            model = projectPath + File.separator + "models" + File.separator + "ggml-model-7b-q6_k.gguf";
         }
 
         ModelParameter modelParams = ModelParameter.builder()
