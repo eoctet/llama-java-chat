@@ -2,6 +2,7 @@ package chat.octet.utils;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.stream.Collectors;
@@ -22,6 +23,10 @@ public class CommonUtils {
             return message;
         }
         return MessageFormat.format(message, args);
+    }
+
+    public static String getProjectPath() {
+        return Paths.get("").toAbsolutePath().toString();
     }
 
 }
