@@ -113,7 +113,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>chat.octet.AppServer</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>

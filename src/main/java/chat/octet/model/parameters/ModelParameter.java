@@ -4,6 +4,7 @@ import chat.octet.model.beans.LlamaContextParams;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 
 import javax.annotation.Nullable;
 
@@ -18,12 +19,18 @@ import javax.annotation.Nullable;
 @Getter
 @Builder
 @ToString
-public final class ModelParameter {
+@Jacksonized
+public class ModelParameter {
 
     /**
      * Llama model path
      */
     private String modelPath;
+
+    /**
+     * Llama model name
+     */
+    private String modelName;
 
     /**
      * <b>context-size</b><br/>

@@ -65,7 +65,6 @@ curl --location 'http://SERVER:PORT/v1/completions' \
 --data '{
     "user": "William",
     "stream": true,
-    "input": "Who are you",
     "prompt": "<YOUR PROMPTS>"
 }'
 ```

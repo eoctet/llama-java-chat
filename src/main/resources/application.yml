@@ -7,8 +7,3 @@ swagger:
 spring:
   lifecycle:
     timeout-per-shutdown-phase: 15s
-
-# model config
-model:
-  name: llama2
-  path: /llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf

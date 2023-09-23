@@ -1,0 +1,29 @@
+[
+  {
+    "modelPath": "/models/ggml-model-7b_m-q6_k.gguf",
+    "modelName": "Llama2",
+    "contextSize": 512,
+    "mainGpu": null,
+    "gpuLayers": 0,
+    "seed": -1,
+    "f16KV": true,
+    "logitsAll": false,
+    "vocabOnly": false,
+    "mmap": true,
+    "mlock": false,
+    "embedding": false,
+    "threads": 8,
+    "batchSize": 512,
+    "lastNTokensSize": 64,
+    "loraBase": null,
+    "loraPath": null,
+    "lowVram": false,
+    "tensorSplit": null,
+    "ropeFreqBase": 10000.0,
+    "ropeFreqScale": 1.0,
+    "gqa": null,
+    "rmsNormEps": null,
+    "mulMatQ": null,
+    "verbose": false
+  }
+]

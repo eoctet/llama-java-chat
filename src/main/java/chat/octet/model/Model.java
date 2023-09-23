@@ -51,6 +51,8 @@ public class Model implements AutoCloseable {
     private final int batchSize;
     @Getter
     private final int lastTokensSize;
+    @Getter
+    private final String modelName;
 
     public Model(ModelParameter modelParams) {
         Preconditions.checkNotNull(modelParams, "Model parameters cannot be null");
@@ -61,7 +63,7 @@ public class Model implements AutoCloseable {
         }
 
         this.modelParams = modelParams;
-
+        this.modelName = modelParams.getModelName();
         //setting context parameters
         this.llamaContextParams = LlamaService.getLlamaContextDefaultParams();
         settingLlamaContextParameters(modelParams);

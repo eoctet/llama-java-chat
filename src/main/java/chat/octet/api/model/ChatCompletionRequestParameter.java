@@ -24,9 +24,6 @@ public class ChatCompletionRequestParameter {
     @JsonProperty("prompt")
     private String prompt;
 
-    @JsonProperty("input")
-    private String input;
-
     //common completion parameters
     @JsonProperty("temperature")
     private Float temperature;

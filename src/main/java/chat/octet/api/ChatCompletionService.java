@@ -4,24 +4,20 @@ import chat.octet.api.model.ChatCompletionChunk;
 import chat.octet.api.model.ChatCompletionData;
 import chat.octet.api.model.ChatCompletionRequestParameter;
 import chat.octet.api.model.ChatMessage;
-import chat.octet.model.AutoDecoder;
-import chat.octet.model.Model;
-import chat.octet.model.UserContext;
-import chat.octet.model.UserContextManager;
+import chat.octet.model.*;
 import chat.octet.model.beans.FinishReason;
 import chat.octet.model.beans.Token;
 import chat.octet.model.criteria.StoppingCriteriaList;
 import chat.octet.model.criteria.impl.MaxTimeCriteria;
 import chat.octet.model.parameters.GenerateParameter;
-import chat.octet.model.parameters.ModelParameter;
 import chat.octet.model.processor.LogitsProcessorList;
 import chat.octet.model.processor.impl.CustomBiasLogitsProcessor;
 import chat.octet.utils.CommonUtils;
 import chat.octet.utils.PromptBuilder;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -34,30 +30,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Configuration
-public class ChatCompletionService implements AutoCloseable {
+public class ChatCompletionService {
 
     private final static GenerateParameter DEFAULT_PARAMETER = GenerateParameter.builder().build();
-
-    @Value("${model.name}")
-    private String modelName;
-
-    private static final String MODEL_PATH = "/llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf";
-
-    private static final ModelParameter modelParams = ModelParameter.builder()
-            .modelPath(MODEL_PATH)
-            .threads(6)
-            .contextSize(4096)
-            .verbose(true)
-            .lastNTokensSize(256)
-            .build();
-
-    private final static Model model = new Model(modelParams);
 
     @Bean
     public RouterFunction<ServerResponse> chatCompletionsFunction() {
@@ -91,7 +73,7 @@ public class ChatCompletionService implements AutoCloseable {
                         }
                         if (message.getRole() == ChatMessage.ChatRole.ASSISTANT) {
                             String content = message.getContent();
-                            buffer.append(content).append("</s>\n");
+                            buffer.append(content).append("</s>");
                         }
                     }
                     return doCompletions(requestParams, buffer.toString(), startTime, true);
@@ -105,12 +87,11 @@ public class ChatCompletionService implements AutoCloseable {
                 RequestPredicates.POST("/v1/completions").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
                     long startTime = System.currentTimeMillis();
-                    if (StringUtils.isBlank(requestParams.getInput())) {
+                    if (StringUtils.isBlank(requestParams.getPrompt())) {
                         return ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
-                                .body(BodyInserters.fromValue("Request parameter 'input' cannot be empty"));
+                                .body(BodyInserters.fromValue("Request parameter 'prompt' cannot be empty"));
                     }
-                    String text = StringUtils.join(requestParams.getPrompt(), "\n\n", requestParams.getInput());
-                    return doCompletions(requestParams, text, startTime, false);
+                    return doCompletions(requestParams, requestParams.getPrompt(), startTime, false);
                 })
         );
     }
@@ -120,7 +101,7 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/tokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(String.class).flatMap(content -> {
-                    int[] tokens = model.tokenize(content, false);
+                    int[] tokens = ModelBuilder.getInstance().getModel().tokenize(content, false);
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(tokens));
                 })
         );
@@ -131,7 +112,7 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/detokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(List.class).flatMap(tokens -> {
-                    AutoDecoder decoder = new AutoDecoder(model);
+                    AutoDecoder decoder = new AutoDecoder(ModelBuilder.getInstance().getModel());
                     int[] arrays = tokens.stream().mapToInt((Object i) -> Integer.parseInt(i.toString())).toArray();
                     String text = decoder.decodeToken(arrays);
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(text));
@@ -144,6 +125,7 @@ public class ChatCompletionService implements AutoCloseable {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/embedding").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(String.class).flatMap(content -> {
+                    Model model = ModelBuilder.getInstance().getModel();
                     if (!model.getModelParams().isEmbedding()) {
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue("Llama model must be created with embedding=True to call this method"));
                     }
@@ -168,12 +150,25 @@ public class ChatCompletionService implements AutoCloseable {
         );
     }
 
+    @Bean
+    public RouterFunction<ServerResponse> modelsFunction() {
+        return RouterFunctions.route(
+                RequestPredicates.GET("/v1/models").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
+                serverRequest -> {
+                    Map<String, Object> data = Maps.newHashMap();
+                    data.put("data", ModelBuilder.getInstance().getModelsList());
+                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(data));
+                }
+        );
+    }
+
     private GenerateParameter getGenerateParameter(ChatCompletionRequestParameter params) {
         long maxTime = TimeUnit.MINUTES.toMillis(Optional.ofNullable(params.getTimeout()).orElse(10L));
         StoppingCriteriaList stopCriteriaList = new StoppingCriteriaList(Lists.newArrayList(new MaxTimeCriteria(maxTime)));
 
         LogitsProcessorList logitsProcessorList = null;
         if (params.getLogitBias() != null && !params.getLogitBias().isEmpty()) {
+            Model model = ModelBuilder.getInstance().getModel();
             logitsProcessorList = new LogitsProcessorList(Lists.newArrayList(new CustomBiasLogitsProcessor(params.getLogitBias(), model.getVocabSize())));
         }
 
@@ -199,6 +194,7 @@ public class ChatCompletionService implements AutoCloseable {
     private Mono<ServerResponse> doCompletions(ChatCompletionRequestParameter requestParams, String prompt, long startTime, boolean chat) {
         String id = chat ? CommonUtils.randomString("octetchat") : CommonUtils.randomString("octetcmpl");
         GenerateParameter generateParams = getGenerateParameter(requestParams);
+        Model model = ModelBuilder.getInstance().getModel();
         UserContext userContext = UserContextManager.getInstance().createUserContext(model, requestParams.getUser());
 
         Iterable<Token> tokenIterable = model.generate(generateParams, userContext, prompt);
@@ -212,7 +208,7 @@ public class ChatCompletionService implements AutoCloseable {
 
             ChatCompletionData data = chat ? new ChatCompletionData(new ChatMessage(ChatMessage.ChatRole.ASSISTANT, content.toString()), finishReason.get().toString())
                     : new ChatCompletionData(content.toString(), finishReason.get().toString());
-            ChatCompletionChunk chunk = new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
+            ChatCompletionChunk chunk = new ChatCompletionChunk(id, model.getModelName(), Lists.newArrayList(data));
 
             return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                     .body(Flux.just(chunk).doOnCancel(() -> {
@@ -228,7 +224,7 @@ public class ChatCompletionService implements AutoCloseable {
                 .body(Flux.fromIterable(tokenIterable).map(token -> {
                     ChatCompletionData data = chat ? new ChatCompletionData("content", token.getText(), token.getFinishReason().name())
                             : new ChatCompletionData(token.getText(), token.getFinishReason().name());
-                    return new ChatCompletionChunk(id, modelName, Lists.newArrayList(data));
+                    return new ChatCompletionChunk(id, model.getModelName(), Lists.newArrayList(data));
                 }).doOnCancel(() -> {
                     log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
                     model.printTimings();
@@ -238,8 +234,4 @@ public class ChatCompletionService implements AutoCloseable {
                 }), ChatCompletionChunk.class);
     }
 
-    @Override
-    public void close() {
-        model.close();
-    }
 }
