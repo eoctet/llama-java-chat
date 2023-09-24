@@ -57,6 +57,17 @@ public final class ModelBuilder implements AutoCloseable {
         return getModel(DEFAULT_MODEL_NAME);
     }
 
+    public Model reloadModel(String name) {
+        synchronized (ModelBuilder.class) {
+            if (model != null) {
+                model.close();
+                model = null;
+                UserContextManager.getInstance().removeAllUsersContext();
+            }
+        }
+        return getModel(name);
+    }
+
     public List<Pair<String, String>> getModelsList() {
         List<ModelParameter> modelParameters = getModelSettings();
         return modelParameters.stream().map(parameter -> Pair.of("id", parameter.getModelName())).collect(Collectors.toList());
