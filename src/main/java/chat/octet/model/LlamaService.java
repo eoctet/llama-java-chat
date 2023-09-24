@@ -4,7 +4,6 @@ package chat.octet.model;
 import chat.octet.model.beans.LlamaContext;
 import chat.octet.model.beans.LlamaContextParams;
 import chat.octet.model.beans.LlamaModel;
-import chat.octet.model.beans.LlamaTokenDataArray;
 import chat.octet.utils.Platform;
 
 public class LlamaService {
@@ -12,6 +11,7 @@ public class LlamaService {
     static {
         System.load(Platform.LIB_RESOURCE_PATH);
         initLocal();
+        llamaBackendInit(true);
     }
 
     public static native void initLocal();
@@ -82,12 +82,12 @@ public class LlamaService {
 
     public static native String printSystemInfo();
 
-    public static native int samplingWithGreedy(LlamaContext ctx, LlamaTokenDataArray candidates, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence);
+    public static native int samplingWithGreedy(LlamaContext ctx, float[] logits, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, boolean penalizeNL);
 
-    public static native int samplingWithMirostatV1(LlamaContext ctx, LlamaTokenDataArray candidates, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, float temperature, float mirostatTAU, float mirostatETA, int mirostatM, Float mirostatMu);
+    public static native int samplingWithMirostatV1(LlamaContext ctx, float[] logits, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, boolean penalizeNL, float temperature, float mirostatTAU, float mirostatETA, int mirostatM, Float mirostatMu);
 
-    public static native int samplingWithMirostatV2(LlamaContext ctx, LlamaTokenDataArray candidates, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, float temperature, float mirostatTAU, float mirostatETA, Float mirostatMu);
+    public static native int samplingWithMirostatV2(LlamaContext ctx, float[] logits, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, boolean penalizeNL, float temperature, float mirostatTAU, float mirostatETA, Float mirostatMu);
 
-    public static native int sampling(LlamaContext ctx, LlamaTokenDataArray candidates, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, float temperature, int topK, float topP, float tsf, float typicalP, int minKeep);
+    public static native int sampling(LlamaContext ctx, float[] logits, int[] lastTokens, int lastTokensSize, float penalty, float alphaFrequency, float alphaPresence, boolean penalizeNL, float temperature, int topK, float topP, float tsf, float typicalP, int minKeep);
 
 }

@@ -38,7 +38,7 @@ public class Model implements AutoCloseable {
     @Getter
     private final int contextSize;
     @Getter
-    private final int embeddingSize = 0;
+    private final int embeddingSize;
     @Getter
     private final int vocabSize;
     @Getter
@@ -86,7 +86,7 @@ public class Model implements AutoCloseable {
 
         this.llamaContext = LlamaService.createNewContextWithModel(llamaModel, this.llamaContextParams);
         this.contextSize = LlamaService.getContextSize(llamaContext);
-        //this.embeddingSize = LlamaLibService.llama_n_embd(llamaContext);
+        this.embeddingSize = LlamaService.getEmbeddingSize(llamaContext);
         this.vocabSize = LlamaService.getVocabSize(llamaContext);
         this.tokenBOS = LlamaService.getTokenBOS(llamaContext);
         this.tokenEOS = LlamaService.getTokenEOS(llamaContext);
@@ -131,15 +131,7 @@ public class Model implements AutoCloseable {
         }
     }
 
-    private LlamaTokenDataArray createEmptyCandidates(float[] logits) {
-        LlamaTokenData[] datas = new LlamaTokenData[getVocabSize()];
-        for (int i = 0; i < getVocabSize(); i++) {
-            datas[i] = new LlamaTokenData(i, logits[i]);
-        }
-        return new LlamaTokenDataArray(datas, getVocabSize(), false);
-    }
-
-    public float[] getDefaultLogits() {
+    public float[] getLogits() {
         return LlamaService.getLogits(llamaContext);
     }
 
@@ -220,8 +212,6 @@ public class Model implements AutoCloseable {
     }
 
     protected int sampling(GenerateParameter generateParams, float[] logits, int[] inputIds, int inputLength) {
-        LlamaTokenDataArray candidates = createEmptyCandidates(logits);
-
         int startIndex = Math.max(0, inputLength - getLastTokensSize());
         int[] lastTokens = ArrayUtils.subarray(inputIds, startIndex, inputLength);
 
@@ -229,12 +219,13 @@ public class Model implements AutoCloseable {
         if (generateParams.getTemperature() == 0) {
             tokenId = LlamaService.samplingWithGreedy(
                     llamaContext,
-                    candidates,
+                    logits,
                     lastTokens,
                     lastTokensSize,
                     generateParams.getRepeatPenalty(),
                     generateParams.getFrequencyPenalty(),
-                    generateParams.getPresencePenalty()
+                    generateParams.getPresencePenalty(),
+                    generateParams.isPenalizeNl()
             );
         } else {
             Float mirostatMu = 2.0f * generateParams.getMirostatTAU();
@@ -243,12 +234,13 @@ public class Model implements AutoCloseable {
                     int mirostatM = 100;
                     tokenId = LlamaService.samplingWithMirostatV1(
                             llamaContext,
-                            candidates,
+                            logits,
                             lastTokens,
                             lastTokensSize,
                             generateParams.getRepeatPenalty(),
                             generateParams.getFrequencyPenalty(),
                             generateParams.getPresencePenalty(),
+                            generateParams.isPenalizeNl(),
                             generateParams.getTemperature(),
                             generateParams.getMirostatTAU(),
                             generateParams.getMirostatETA(),
@@ -259,12 +251,13 @@ public class Model implements AutoCloseable {
                 case V2:
                     tokenId = LlamaService.samplingWithMirostatV2(
                             llamaContext,
-                            candidates,
+                            logits,
                             lastTokens,
                             lastTokensSize,
                             generateParams.getRepeatPenalty(),
                             generateParams.getFrequencyPenalty(),
                             generateParams.getPresencePenalty(),
+                            generateParams.isPenalizeNl(),
                             generateParams.getTemperature(),
                             generateParams.getMirostatTAU(),
                             generateParams.getMirostatETA(),
@@ -276,12 +269,13 @@ public class Model implements AutoCloseable {
                     int topK = generateParams.getTopK() <= 0 ? getVocabSize() : generateParams.getTopK();
                     tokenId = LlamaService.sampling(
                             llamaContext,
-                            candidates,
+                            logits,
                             lastTokens,
                             lastTokensSize,
                             generateParams.getRepeatPenalty(),
                             generateParams.getFrequencyPenalty(),
                             generateParams.getPresencePenalty(),
+                            generateParams.isPenalizeNl(),
                             generateParams.getTemperature(),
                             topK,
                             generateParams.getTopP(),

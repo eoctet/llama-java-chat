@@ -88,7 +88,7 @@ public final class Generator implements Iterator<Token> {
                 userContext.getInputLength()
         );
         userContext.addPastTokensSize(evaluateTotalSize);
-        userContext.saveScores(model.getDefaultLogits(), evaluateTotalSize);
+        userContext.saveScores(model.getLogits(), evaluateTotalSize);
 
         float[] logits = userContext.getScores();
         // execute logits processor
