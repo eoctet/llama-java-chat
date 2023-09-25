@@ -1,12 +1,16 @@
 package chat.octet.model.parameters;
 
 import chat.octet.model.beans.LlamaContextParams;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 /**
  * Llama model parameters
@@ -18,8 +22,8 @@ import javax.annotation.Nullable;
  */
 @Getter
 @Builder
-@ToString
 @Jacksonized
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ModelParameter {
 
     /**
@@ -196,4 +200,12 @@ public class ModelParameter {
     @Builder.Default
     private boolean verbose = false;
 
+    @Override
+    public String toString() {
+        try {
+           return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

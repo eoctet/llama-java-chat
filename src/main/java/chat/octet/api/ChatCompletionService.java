@@ -222,8 +222,9 @@ public class ChatCompletionService {
         //streaming output
         return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(Flux.fromIterable(tokenIterable).map(token -> {
-                    ChatCompletionData data = chat ? new ChatCompletionData("content", token.getText(), token.getFinishReason().name())
-                            : new ChatCompletionData(token.getText(), token.getFinishReason().name());
+                    String text = token.getFinishReason().isFinished() ? "[DONE]" : token.getText();
+                    ChatCompletionData data = chat ? new ChatCompletionData("content", text, token.getFinishReason().name())
+                            : new ChatCompletionData(text, token.getFinishReason().name());
                     return new ChatCompletionChunk(id, model.getModelName(), Lists.newArrayList(data));
                 }).doOnCancel(() -> {
                     log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
