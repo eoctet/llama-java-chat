@@ -1,9 +1,8 @@
 package chat.octet.test;
 
+import chat.octet.api.ModelBuilder;
 import chat.octet.model.Model;
-import chat.octet.model.ModelBuilder;
 import chat.octet.model.parameters.GenerateParameter;
-import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.PromptBuilder;
 import org.apache.commons.lang3.StringUtils;
 

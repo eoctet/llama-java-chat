@@ -1,6 +1,8 @@
-package chat.octet.model;
+package chat.octet.api;
 
-import chat.octet.exceptions.ModelException;
+import chat.octet.exceptions.ServerException;
+import chat.octet.model.Model;
+import chat.octet.model.UserContextManager;
 import chat.octet.model.parameters.ModelParameter;
 import chat.octet.utils.CommonUtils;
 import com.fasterxml.jackson.databind.JavaType;
@@ -85,13 +87,13 @@ public final class ModelBuilder implements AutoCloseable {
                 return parameter;
             }
         }
-        throw new ModelException("Unable to find model settings, name: " + name);
+        throw new ServerException("Unable to find model settings, name: " + name);
     }
 
     private List<ModelParameter> getModelSettings() {
         File file = new File(MODEL_SETTINGS);
         if (!file.isFile() || !file.exists()) {
-            throw new ModelException("Can not read model configuration file, please make sure it is valid");
+            throw new ServerException("Can not read model configuration file, please make sure it is valid");
         }
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             ObjectMapper mapper = new ObjectMapper();
@@ -99,7 +101,7 @@ public final class ModelBuilder implements AutoCloseable {
             String json = bufferedReader.lines().collect(Collectors.joining());
             return mapper.readValue(json, javaType);
         } catch (Exception e) {
-            throw new ModelException("Parse model configuration file error", e);
+            throw new ServerException("Parse model configuration file error", e);
         }
     }
 

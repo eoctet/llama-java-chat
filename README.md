@@ -1,96 +1,106 @@
-# ☕️ Java bindings for [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
+# 🤖️ Llama Java Chat
 
-[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md)
+[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) | ☕️ [**Llama-java-core**](https://github.com/eoctet/llama-java-core.git)
 
-Another simple Java bindings for 🦙 [**llama.cpp**](https://github.com/ggerganov/llama.cpp), this project has the same functionality as other language versions.
+This is an Llama chat robot service.
 
 #### Main content
-- 🚀 Built based on Llama.cpp, supports GGUF model. For more details, please follow **@ggerganov's** [`llama.cpp`](https://github.com/ggerganov/llama.cpp)
-- 🚀 Supported:
-  - [X] OpenAPI (Some sampling parameters are adjusted to Llama2)
-  - [X] Multi-user sessions
-  - [X] Cloud deployment
-  - [X] CLI interaction
+
+- [X] 🚀 OpenAPI (Some sampling parameters are adjusted to Llama2)
+- [X] 🚀 Multi-user sessions
+- [X] 🚀 Web UI [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
+- [X] 🚀 Cloud deployment
+- [X] 🚀 CLI interaction
 
 
-## Usages
+## Quick start
 
 
-#### ConsoleQA
+#### Web & App
 
-```java
-public class ConsoleQA {
+Following the interface specifications of ChatGPT, only the main interfaces are implemented, It can be integrated with [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web), WebUI, and App for use.
 
-    private static final String MODEL_PATH = "/llama.cpp/models/llama2/ggml-model-7b-q6_k.gguf";
+> ℹ️ __Differences__
+> 1. Added parameters for the Llama series model and removed unsupported GPT parameters;
+> 2. By default, the Llama2 chat prompt template is used. If you need to adapt to other models, you can adjust it yourself;
+> 3. There are no unnecessary functions such as requesting authentication and usage queries;
+> 4. Optimize the conversation and chat API, without the need to pass on historical conversation context, only the current conversation content is sufficient.
+>
+> > More information: [`API Docs`](docs/API.md)。
 
-    public static void main(String[] args) {
-        ModelParameter modelParams = ModelParameter.builder()
-                .modelPath(MODEL_PATH)
-                .threads(8)
-                .contextSize(4096)
-                .verbose(true)
-                .build();
+For example
 
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-             Model model = new Model(modelParams)) {
+> POST **/v1/chat/completions**
 
-            GenerateParameter generateParams = GenerateParameter.builder().build();
-            String system = "Answer the questions.";
-
-            while (true) {
-                System.out.print("\nQuestion: ");
-                String input = bufferedReader.readLine();
-                if (StringUtils.trimToEmpty(input).equalsIgnoreCase("exit")) {
-                    break;
-                }
-                String question = PromptBuilder.toPrompt(system, input);
-                model.generate(generateParams, question).forEach(e -> System.out.print(e.getText()));
-                model.printTimings();
-            }
-        } catch (Exception e) {
-            System.err.println("Error: " + e);
-            System.exit(1);
+```shell
+curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
+--header 'Content-Type: application/json' \
+--data '{
+    "messages": [
+        {
+            "role": "SYSTEM",
+            "content": "<YOUR_PROMPT>"
+        },
+        {
+            "role": "USER",
+            "content": "Who are you?"
         }
-    }
+    ],
+    "user": "william",
+    "verbose": true,
+    "stream": true,
+    "model": "Llama2-chat"
+}'
+```
+
+The API will return data in a stream format:
+
+```json
+{
+    "id": "octetchat-98fhd2dvj7",
+    "model": "Llama2-chat",
+    "created": 1695614393810,
+    "choices": [
+        {
+            "index": 0,
+            "delta": {
+                "content": "Hi"
+            },
+            "finish_reason": "NONE"
+        }
+    ]
 }
 ```
 
-#### Open API
+## Deployment
 
-- **`COMPLETIONS`**
-
-```bash
-curl --location 'http://SERVER:PORT/v1/completions' \
---header 'Content-Type: application/json' \
---data '{
-    "user": "William",
-    "stream": true,
-    "prompt": "<YOUR PROMPTS>"
-}'
-```
-
-- **`CHAT`**
+- 💻 Maven build
 
 ```bash
-curl --location 'http://SERVER:PORT/v1/chat/completions' \
---header 'Content-Type: application/json' \
---data '{
-    "user": "William",
-    "stream": true,
-    "messages": [
-        {
-            "role": "USER",
-            "content": "Who are you"
-        }
-    ]
-}'
+git clone https://github.com/eoctet/llama-java-chat.git
+
+# Maven build
+cd llama-java-chat & bash maven_build.sh
+
+>> ...
+>> target/llama-java-chat.tar.gz
 ```
 
-> [!ATTENTIONS]
+- 🚀 Install & Starting your server
+
+```bash
+tar -xzvf llama-java-chat.tar.gz -C <YOUR_PATH>
+
+# Default URL: http://YOUR_IP_ADDR:8152/
+
+cd <YOUR_PATH> & bash server.sh start
+```
+
+----
+
+> ⚠️ __ATTENTIONS__
 >
 > This project does not include language model. Please obtain the required model files yourself.
-> 
-> Some features are being optimized and updated.
 
 ## Feedback
 
