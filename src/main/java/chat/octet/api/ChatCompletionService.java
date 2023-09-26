@@ -29,6 +29,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -112,7 +113,7 @@ public class ChatCompletionService {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/detokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(List.class).flatMap(tokens -> {
-                    AutoDecoder decoder = new AutoDecoder(ModelBuilder.getInstance().getModel());
+                    AutoDecoder decoder = new AutoDecoder();
                     int[] arrays = tokens.stream().mapToInt((Object i) -> Integer.parseInt(i.toString())).toArray();
                     String text = decoder.decodeToken(arrays);
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(text));
@@ -212,10 +213,10 @@ public class ChatCompletionService {
 
             return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                     .body(Flux.just(chunk).doOnCancel(() -> {
-                        log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                        log.info(MessageFormat.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
                         model.printTimings();
                     }).doOnComplete(() -> {
-                        log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                        log.info(MessageFormat.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
                         model.printTimings();
                     }), ChatCompletionChunk.class);
         }
@@ -227,10 +228,10 @@ public class ChatCompletionService {
                             : new ChatCompletionData(text, token.getFinishReason().name());
                     return new ChatCompletionChunk(id, model.getModelName(), Lists.newArrayList(data));
                 }).doOnCancel(() -> {
-                    log.info(CommonUtils.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                    log.info(MessageFormat.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
                     model.printTimings();
                 }).doOnComplete(() -> {
-                    log.info(CommonUtils.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
+                    log.info(MessageFormat.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
                     model.printTimings();
                 }), ChatCompletionChunk.class);
     }

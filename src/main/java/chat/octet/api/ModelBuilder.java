@@ -4,7 +4,6 @@ import chat.octet.exceptions.ServerException;
 import chat.octet.model.Model;
 import chat.octet.model.UserContextManager;
 import chat.octet.model.parameters.ModelParameter;
-import chat.octet.utils.CommonUtils;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +26,7 @@ public final class ModelBuilder implements AutoCloseable {
     private static volatile ModelBuilder builder;
 
     static {
-        MODEL_SETTINGS = StringUtils.join(CommonUtils.getProjectPath(), File.separator, "conf", File.separator, "setting.json");
+        MODEL_SETTINGS = StringUtils.join(Paths.get("").toAbsolutePath().toString(), File.separator, "conf", File.separator, "setting.json");
     }
 
     private ModelBuilder() {
