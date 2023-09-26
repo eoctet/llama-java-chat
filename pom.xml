@@ -9,6 +9,25 @@
     <packaging>jar</packaging>
     <version>1.1.0</version>
 
+    <name>llama-java-chat</name>
+    <description>This is a Llama chat robot service.</description>
+    <url>https://github.com/eoctet/llama-java-chat</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>William</name>
+            <url>https://github.com/eoctet</url>
+            <organization>Stacks Tech</organization>
+        </developer>
+    </developers>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
@@ -84,7 +103,7 @@
         <dependency>
             <groupId>chat.octet</groupId>
             <artifactId>llama-java-core</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 

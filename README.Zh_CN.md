@@ -28,6 +28,8 @@
 >
 > > 完整的API信息请参考[`API 文档`](docs/API.md)。
 
+![webui.png](docs%2Fwebui.png)
+
 举个栗子
 
 > POST **/v1/chat/completions**

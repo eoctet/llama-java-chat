@@ -2,7 +2,7 @@
 
 [**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) | ☕️ [**Llama-java-core**](https://github.com/eoctet/llama-java-core.git)
 
-This is an Llama chat robot service.
+This is a Llama chat robot service.
 
 #### Main content
 
@@ -27,6 +27,8 @@ Following the interface specifications of ChatGPT, only the main interfaces are 
 > 4. Optimize the conversation and chat API, without the need to pass on historical conversation context, only the current conversation content is sufficient.
 >
 > > More information: [`API Docs`](docs/API.md)。
+
+![webui.png](docs%2Fwebui.png)
 
 For example
 
