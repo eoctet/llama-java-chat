@@ -74,6 +74,63 @@ The API will return data in a stream format:
 }
 ```
 
+#### CLI interaction
+
+Run command line interaction and specify the language model that needs to be loaded.
+
+```bash
+java -jar llama-java-chat-console-1.1.0.jar --mode llama2-chat --system 'YOUR_PROMPT'
+```
+
+```txt
+... ...
+
+User: Who are you
+AI: As an AI, I don't know who I am. My designers and creators created me. However, I am a virtual assistant designed to provide assistance and answer questions.
+```
+
+> Use `help` to view more generate parameters, for example:
+
+```bash
+java -jar llama-java-chat-console-1.1.0.jar --help
+usage: LLAMA-JAVA-CHAT v1.1.0
+ -c,--completions               Use completions mode.
+    --frequency-penalty <arg>   Repeat alpha frequency penalty (default:
+                                0.0, 0.0 = disabled)
+ -h,--help                      Show this help message and exit.
+    --keep <arg>                Number of tokens to keep from the context.
+ -m,--model <arg>               Load model name, default: llama2-chat.
+    --max-new-tokens <arg>      Maximum new token generation size
+                                (default: 0 unlimited).
+    --mirostat <arg>            Enable Mirostat sampling, controlling
+                                perplexity during text generation
+                                (default: 0, 0 = disabled, 1 = Mirostat, 2
+                                = Mirostat 2.0).
+    --mirostat-ent <arg>        Set the Mirostat target entropy, parameter
+                                tau (default: 5.0).
+    --mirostat-lr <arg>         Set the Mirostat learning rate, parameter
+                                eta (default: 0.1).
+    --no-penalize-nl <arg>      Disable penalization for newline tokens
+                                when applying the repeat penalty (default:
+                                true).
+    --presence-penalty <arg>    Repeat alpha presence penalty (default:
+                                0.0, 0.0 = disabled)
+    --repeat-penalty <arg>      Control the repetition of token sequences
+                                in the generated text (default: 1.1).
+    --system <arg>              Set a system prompt.
+    --temperature <arg>         Adjust the randomness of the generated
+                                text (default: 0.8).
+    --tfs <arg>                 Enable tail free sampling with parameter z
+                                (default: 1.0, 1.0 = disabled).
+    --top-k <arg>               Top-k sampling (default: 40, 0 =
+                                disabled).
+    --top-p <arg>               Top-p sampling (default: 0.9).
+    --typical <arg>             Enable typical sampling sampling with
+                                parameter p (default: 1.0, 1.0 =
+                                disabled).
+    --verbose-prompt            Print the prompt before generating text.
+```
+
 ## Deployment
 
 - 💻 Maven build
@@ -82,20 +139,30 @@ The API will return data in a stream format:
 git clone https://github.com/eoctet/llama-java-chat.git
 
 # Maven build
-cd llama-java-chat & bash maven_build.sh
+cd llama-java-chat
 
->> ...
->> target/llama-java-chat.tar.gz
+# Build app type: server / console
+bash maven_build.sh server
 ```
 
 - 🚀 Install & Starting your server
 
 ```bash
-tar -xzvf llama-java-chat.tar.gz -C <YOUR_PATH>
-
 # Default URL: http://YOUR_IP_ADDR:8152/
 
 cd <YOUR_PATH> & bash app_server.sh start
+```
+
+- ⚙️ Directory
+
+```text
+=> llama-java-chat
+   ⌊___ llama-java-chat-server-1.1.0.jar
+   ⌊___ app_server.sh
+   ⌊___ conf
+        ⌊___ setting.json
+
+···
 ```
 
 ----

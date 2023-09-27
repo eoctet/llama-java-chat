@@ -74,28 +74,95 @@ curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
 }
 ```
 
+#### 命令行交互
+
+运行命令行交互，指定需要加载的语言模型。
+
+```bash
+java -jar llama-java-chat-console-1.1.0.jar --mode llama2-chat --system 'YOUR_PROMPT'
+```
+
+```txt
+... ...
+
+User: 你是谁
+AI: 作为一个 AI，我不知道我是谁。我的设计者和创建者创造了我。但是，我是一个虚拟助手，旨在提供帮助和回答问题。
+```
+
+> 使用 `help` 查看更多参数，示例如下：
+
+```bash
+java -jar llama-java-chat-console-1.1.0.jar --help
+usage: LLAMA-JAVA-CHAT v1.1.0
+ -c,--completions               Use completions mode.
+    --frequency-penalty <arg>   Repeat alpha frequency penalty (default:
+                                0.0, 0.0 = disabled)
+ -h,--help                      Show this help message and exit.
+    --keep <arg>                Number of tokens to keep from the context.
+ -m,--model <arg>               Load model name, default: llama2-chat.
+    --max-new-tokens <arg>      Maximum new token generation size
+                                (default: 0 unlimited).
+    --mirostat <arg>            Enable Mirostat sampling, controlling
+                                perplexity during text generation
+                                (default: 0, 0 = disabled, 1 = Mirostat, 2
+                                = Mirostat 2.0).
+    --mirostat-ent <arg>        Set the Mirostat target entropy, parameter
+                                tau (default: 5.0).
+    --mirostat-lr <arg>         Set the Mirostat learning rate, parameter
+                                eta (default: 0.1).
+    --no-penalize-nl <arg>      Disable penalization for newline tokens
+                                when applying the repeat penalty (default:
+                                true).
+    --presence-penalty <arg>    Repeat alpha presence penalty (default:
+                                0.0, 0.0 = disabled)
+    --repeat-penalty <arg>      Control the repetition of token sequences
+                                in the generated text (default: 1.1).
+    --system <arg>              Set a system prompt.
+    --temperature <arg>         Adjust the randomness of the generated
+                                text (default: 0.8).
+    --tfs <arg>                 Enable tail free sampling with parameter z
+                                (default: 1.0, 1.0 = disabled).
+    --top-k <arg>               Top-k sampling (default: 40, 0 =
+                                disabled).
+    --top-p <arg>               Top-p sampling (default: 0.9).
+    --typical <arg>             Enable typical sampling sampling with
+                                parameter p (default: 1.0, 1.0 =
+                                disabled).
+    --verbose-prompt            Print the prompt before generating text.
+```
+
 ## 如何部署
 
-- 💻 编译
+- 💻 快速编译
 
 ```bash
 git clone https://github.com/eoctet/llama-java-chat.git
 
 # Maven build
-cd llama-java-chat & bash maven_build.sh
+cd llama-java-chat
 
->> ...
->> target/llama-java-chat.tar.gz
+# Build app type: server / console
+bash maven_build.sh server
 ```
 
-- 🚀 部署
+- 🚀 部署和启动服务
 
 ```bash
-tar -xzvf llama-java-chat.tar.gz -C <YOUR_PATH>
-
 # 启动服务，默认访问地址为 http://YOUR_IP_ADDR:8152/
 
 cd <YOUR_PATH> & bash app_server.sh start
+```
+
+- ⚙️ 目录结构
+
+```text
+=> llama-java-chat
+   ⌊___ llama-java-chat-server-1.1.0.jar
+   ⌊___ app_server.sh
+   ⌊___ conf
+        ⌊___ setting.json
+
+···
 ```
 
 ----
