@@ -165,7 +165,6 @@ cd <YOUR_PATH> & bash app_server.sh start
 ···
 ```
 
-----
 
 > ⚠️ __注意事项__
 > 

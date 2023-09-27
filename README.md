@@ -26,7 +26,7 @@ Following the interface specifications of ChatGPT, only the main interfaces are 
 > 3. There are no unnecessary functions such as requesting authentication and usage queries;
 > 4. Optimize the conversation and chat API, without the need to pass on historical conversation context, only the current conversation content is sufficient.
 >
-> > More information: [`API Docs`](docs/API.md)。
+> > More information: [`API Docs`](docs/API.md).
 
 ![webui.png](docs%2Fwebui.png)
 
@@ -165,7 +165,6 @@ cd <YOUR_PATH> & bash app_server.sh start
 ···
 ```
 
-----
 
 > ⚠️ __ATTENTIONS__
 >
