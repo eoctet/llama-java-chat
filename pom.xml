@@ -119,6 +119,28 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>server</id>
+            <properties>
+                <profile.id>server</profile.id>
+                <main.class>chat.octet.AppServer</main.class>
+                <file.prefix>server</file.prefix>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>console</id>
+            <properties>
+                <profile.id>console</profile.id>
+                <main.class>chat.octet.AppConsole</main.class>
+                <file.prefix>console</file.prefix>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -136,7 +158,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>chat.octet.AppServer</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -148,6 +170,7 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>${project.artifactId}-${file.prefix}-${project.version}</finalName>
     </build>
 
 </project>
