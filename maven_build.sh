@@ -14,7 +14,7 @@ if [ -f "$BUILD_TARGET/llama-java-chat-1.1.0.jar" ]; then
   cp -r $PROJECT_DIR/conf $BUILD_TARGET/build
   cp -r $PROJECT_DIR/server.sh $BUILD_TARGET/build
   cd "$BUILD_TARGET"
-  tar -zvcf llama-cpp-java.tar.gz --exclude=.DS_Store build/*
+  tar -zvcf llama-java-chat.tar.gz --exclude=.DS_Store build/*
 fi
 
 

@@ -53,7 +53,8 @@ public class AppConsole {
                     System.err.print(input);
                 }
                 model.generate(generateParams, text).forEach(e -> System.out.print(e.getText()));
-                model.printTimings();
+                System.out.print("\n");
+                model.metrics();
                 firstTime = false;
             }
         } catch (Exception e) {

@@ -214,10 +214,10 @@ public class ChatCompletionService {
             return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                     .body(Flux.just(chunk).doOnCancel(() -> {
                         log.info(MessageFormat.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
-                        model.printTimings();
+                        model.metrics();
                     }).doOnComplete(() -> {
                         log.info(MessageFormat.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
-                        model.printTimings();
+                        model.metrics();
                     }), ChatCompletionChunk.class);
         }
         //streaming output
@@ -229,10 +229,10 @@ public class ChatCompletionService {
                     return new ChatCompletionChunk(id, model.getModelName(), Lists.newArrayList(data));
                 }).doOnCancel(() -> {
                     log.info(MessageFormat.format("Generate cancel, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
-                    model.printTimings();
+                    model.metrics();
                 }).doOnComplete(() -> {
                     log.info(MessageFormat.format("Generate completed, User id: {0}, elapsed time: {1} ms.", userContext.getId(), (System.currentTimeMillis() - startTime)));
-                    model.printTimings();
+                    model.metrics();
                 }), ChatCompletionChunk.class);
     }
 
