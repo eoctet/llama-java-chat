@@ -79,7 +79,7 @@ curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
 运行命令行交互，指定需要加载的语言模型。
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --mode llama2-chat --system 'YOUR_PROMPT'
+java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_PROMPT'
 ```
 
 ```txt

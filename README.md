@@ -79,7 +79,7 @@ The API will return data in a stream format:
 Run command line interaction and specify the language model that needs to be loaded.
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --mode llama2-chat --system 'YOUR_PROMPT'
+java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_PROMPT'
 ```
 
 ```txt
