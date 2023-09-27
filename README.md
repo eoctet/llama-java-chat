@@ -95,7 +95,7 @@ tar -xzvf llama-java-chat.tar.gz -C <YOUR_PATH>
 
 # Default URL: http://YOUR_IP_ADDR:8152/
 
-cd <YOUR_PATH> & bash server.sh start
+cd <YOUR_PATH> & bash app_server.sh start
 ```
 
 ----

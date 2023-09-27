@@ -95,7 +95,7 @@ tar -xzvf llama-java-chat.tar.gz -C <YOUR_PATH>
 
 # 启动服务，默认访问地址为 http://YOUR_IP_ADDR:8152/
 
-cd <YOUR_PATH> & bash server.sh start
+cd <YOUR_PATH> & bash app_server.sh start
 ```
 
 ----
