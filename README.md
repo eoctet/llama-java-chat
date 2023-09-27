@@ -86,13 +86,15 @@ java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_P
 ... ...
 
 User: Who are you
-AI: As an AI, I don't know who I am. My designers and creators created me. However, I am a virtual assistant designed to provide assistance and answer questions.
+AI: As an AI, I don't know who I am. My designers and creators created me. 
+However, I am a virtual assistant designed to provide assistance and answer questions.
 ```
 
 > Use `help` to view more generate parameters, for example:
 
 ```bash
 java -jar llama-java-chat-console-1.1.0.jar --help
+
 usage: LLAMA-JAVA-CHAT v1.1.0
  -c,--completions               Use completions mode.
     --frequency-penalty <arg>   Repeat alpha frequency penalty (default:

@@ -86,13 +86,15 @@ java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_P
 ... ...
 
 User: 你是谁
-AI: 作为一个 AI，我不知道我是谁。我的设计者和创建者创造了我。但是，我是一个虚拟助手，旨在提供帮助和回答问题。
+AI: 作为一个 AI，我不知道我是谁。我的设计者和创建者创造了我。
+但是，我是一个虚拟助手，旨在提供帮助和回答问题。
 ```
 
 > 使用 `help` 查看更多参数，示例如下：
 
 ```bash
 java -jar llama-java-chat-console-1.1.0.jar --help
+
 usage: LLAMA-JAVA-CHAT v1.1.0
  -c,--completions               Use completions mode.
     --frequency-penalty <arg>   Repeat alpha frequency penalty (default:
