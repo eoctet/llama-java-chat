@@ -7,7 +7,7 @@ This is a Llama chat robot service.
 #### Main content
 
 - [X] 🚀 OpenAPI (Some sampling parameters are adjusted to Llama2)
-- [X] 🚀 Multi-user sessions
+- [X] 🚀 Conversation memory
 - [X] 🚀 Web UI [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 Cloud deployment
 - [X] 🚀 CLI interaction

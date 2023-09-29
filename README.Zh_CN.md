@@ -7,7 +7,7 @@
 #### 主要功能
 
 - [X] 🚀 OpenAPI（部分采样参数已按照Llama2进行调整）
-- [X] 🚀 多用户会话，你可以使用不同的用户身份进行聊天
+- [X] 🚀 对话历史记忆
 - [X] 🚀 Web UI [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 服务端部署
 - [X] 🚀 命令行交互
