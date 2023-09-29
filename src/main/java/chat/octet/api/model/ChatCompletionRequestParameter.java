@@ -1,6 +1,6 @@
 package chat.octet.api.model;
 
-import chat.octet.model.UserContextManager;
+import chat.octet.model.beans.ChatMessage;
 import chat.octet.model.parameters.GenerateParameter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,9 +12,6 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ChatCompletionRequestParameter {
-
-    @JsonProperty("user")
-    private String user = UserContextManager.DEFAULT_USER_ID;
 
     //chat completion parameters
     @JsonProperty("messages")

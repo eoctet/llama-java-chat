@@ -3,7 +3,6 @@ package chat.octet;
 import chat.octet.api.ModelBuilder;
 import chat.octet.model.Model;
 import chat.octet.model.parameters.GenerateParameter;
-import chat.octet.utils.PromptBuilder;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -86,25 +85,25 @@ public class AppConsole {
              Model model = ModelBuilder.getInstance().getModel(modelName)) {
 
             GenerateParameter generateParams = parseCmdParameter(cmd);
-            boolean firstTime = true;
-            String defaultPrompt = cmd.getOptionValue("system", "Answer the questions.");
+            String system = cmd.getOptionValue("system", "Answer the questions.");
 
             while (true) {
                 System.out.print("\n\nUser: ");
                 String input = bufferedReader.readLine();
+
                 if (StringUtils.trimToEmpty(input).equalsIgnoreCase("exit")) {
                     break;
                 }
-                String text = completions ? input : PromptBuilder.toPrompt(firstTime ? defaultPrompt : null, input);
+
                 if (!completions) {
                     System.out.print("AI: ");
+                    model.chat(generateParams, system, input).forEach(e -> System.out.print(e.getText()));
                 } else {
                     System.err.print(input);
+                    model.generate(generateParams, input).forEach(e -> System.out.print(e.getText()));
                 }
-                model.generate(generateParams, text).forEach(e -> System.out.print(e.getText()));
                 System.out.print("\n");
                 model.metrics();
-                firstTime = false;
             }
         } catch (Exception e) {
             System.err.println("Error: " + e);

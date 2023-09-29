@@ -2,7 +2,6 @@ package chat.octet.api;
 
 import chat.octet.exceptions.ServerException;
 import chat.octet.model.Model;
-import chat.octet.model.UserContextManager;
 import chat.octet.model.parameters.ModelParameter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,7 +63,6 @@ public final class ModelBuilder implements AutoCloseable {
             if (model != null) {
                 model.close();
                 model = null;
-                UserContextManager.getInstance().removeAllUsersContext();
             }
         }
         return getModel(name);
