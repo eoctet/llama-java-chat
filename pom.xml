@@ -103,7 +103,7 @@
         <dependency>
             <groupId>chat.octet</groupId>
             <artifactId>llama-java-core</artifactId>
-            <version>1.1.3</version>
+            <version>1.1.5</version>
         </dependency>
     </dependencies>
 
@@ -135,7 +135,7 @@
             <id>console</id>
             <properties>
                 <profile.id>console</profile.id>
-                <main.class>chat.octet.AppConsole</main.class>
+                <main.class>chat.octet.test.AutoTest</main.class>
                 <file.prefix>console</file.prefix>
             </properties>
         </profile>
