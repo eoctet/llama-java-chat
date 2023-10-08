@@ -135,7 +135,7 @@
             <id>console</id>
             <properties>
                 <profile.id>console</profile.id>
-                <main.class>chat.octet.test.AutoTest</main.class>
+                <main.class>chat.octet.AppConsole</main.class>
                 <file.prefix>console</file.prefix>
             </properties>
         </profile>
