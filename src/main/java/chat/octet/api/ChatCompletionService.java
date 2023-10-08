@@ -114,7 +114,9 @@ public class ChatCompletionService {
                     if (!model.getModelParams().isEmbedding()) {
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue("Llama model must be created with embedding=True to call this method"));
                     }
-                    float[] embedding = LlamaService.embedding(content);
+                    //TODO fix here
+                    //float[] embedding = LlamaService.embedding(content);
+                    float[] embedding = LlamaService.getEmbeddings();
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(embedding));
                 })
         );
@@ -147,7 +149,7 @@ public class ChatCompletionService {
                 .topP(Optional.ofNullable(params.getTopP()).orElse(DEFAULT_PARAMETER.getTopP()))
                 .tsf(Optional.ofNullable(params.getTfs()).orElse(DEFAULT_PARAMETER.getTsf()))
                 .typical(Optional.ofNullable(params.getTypical()).orElse(DEFAULT_PARAMETER.getTypical()))
-                .maxNewTokensSize(Optional.ofNullable(params.getMaxNewTokensSize()).orElse(DEFAULT_PARAMETER.getMaxNewTokensSize()))
+                .maxNewTokenSize(Optional.ofNullable(params.getMaxNewTokensSize()).orElse(DEFAULT_PARAMETER.getMaxNewTokenSize()))
                 .frequencyPenalty(Optional.ofNullable(params.getFrequencyPenalty()).orElse(DEFAULT_PARAMETER.getFrequencyPenalty()))
                 .presencePenalty(Optional.ofNullable(params.getPresencePenalty()).orElse(DEFAULT_PARAMETER.getPresencePenalty()))
                 .repeatPenalty(Optional.ofNullable(params.getRepeatPenalty()).orElse(DEFAULT_PARAMETER.getRepeatPenalty()))
@@ -170,7 +172,7 @@ public class ChatCompletionService {
             ChatCompletionData data;
             if (chat) {
                 result = model.chatCompletions(generateParams, system, input);
-                data = new ChatCompletionData(ChatMessage.assistant(result.getContent()), result.getFinishReason().toString());
+                data = new ChatCompletionData(ChatMessage.toAssistant(result.getContent()), result.getFinishReason().toString());
             } else {
                 result = model.completions(generateParams, input);
                 data = new ChatCompletionData(result.getContent(), result.getFinishReason().toString());

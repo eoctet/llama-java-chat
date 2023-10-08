@@ -35,7 +35,6 @@ public class AppConsole {
         OPTIONS.addOption(null, "mirostat-ent", true, "Set the Mirostat target entropy, parameter tau (default: 5.0).");
         OPTIONS.addOption(null, "max-new-tokens", true, "Maximum new token generation size (default: 0 unlimited).");
         OPTIONS.addOption(null, "verbose-prompt", false, "Print the prompt before generating text.");
-        OPTIONS.addOption(null, "keep", true, "Number of tokens to keep from the context.");
     }
 
     private static GenerateParameter parseCmdParameter(CommandLine cmd) {
@@ -62,9 +61,8 @@ public class AppConsole {
                 .mirostatMode(mirostatMode)
                 .mirostatETA(Float.parseFloat(cmd.getOptionValue("mirostat-lr", String.valueOf(DEFAULT_PARAMETER.getMirostatETA()))))
                 .mirostatTAU(Float.parseFloat(cmd.getOptionValue("mirostat-en", String.valueOf(DEFAULT_PARAMETER.getMirostatTAU()))))
-                .maxNewTokensSize(Integer.parseInt(cmd.getOptionValue("max-new-tokens", String.valueOf(DEFAULT_PARAMETER.getMaxNewTokensSize()))))
+                .maxNewTokenSize(Integer.parseInt(cmd.getOptionValue("max-new-tokens", String.valueOf(DEFAULT_PARAMETER.getMaxNewTokenSize()))))
                 .verbosePrompt(cmd.hasOption("verbose-prompt"))
-                .keepContextTokensSize(Integer.parseInt(cmd.getOptionValue("keep", String.valueOf(DEFAULT_PARAMETER.getKeepContextTokensSize()))))
                 .build();
     }
 
