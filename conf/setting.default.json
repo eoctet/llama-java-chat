@@ -17,14 +17,14 @@
     "batchSize": 512,
     "lastNTokensSize": 64,
     "loraBase": null,
-    "loraScale": 0.0,
     "loraPath": null,
+    "loraScale": 0.0,
     "tensorSplit": null,
-    "ropeFreqBase": 10000.0,
-    "ropeFreqScale": 1.0,
+    "ropeFreqBase": 0.0,
+    "ropeFreqScale": 0.0,
     "gqa": null,
     "rmsNormEps": null,
-    "mulMatQ": null,
+    "mulMatQ": true,
     "verbose": false
   }
 ]
