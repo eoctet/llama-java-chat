@@ -123,6 +123,21 @@ public class ChatCompletionService {
     }
 
     @Bean
+    public RouterFunction<ServerResponse> resetFunction() {
+        return RouterFunctions.route(
+                RequestPredicates.POST("/v1/reset").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
+                serverRequest -> serverRequest.bodyToMono(ChatCompletionRequestParameter.class).flatMap(requestParams -> {
+                    if ("ALL".equalsIgnoreCase(requestParams.getUser())) {
+                        ModelBuilder.getInstance().getModel().removeAllChatStatus();
+                    } else {
+                        ModelBuilder.getInstance().getModel().removeChatStatus(requestParams.getUser());
+                    }
+                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue("Success"));
+                })
+        );
+    }
+
+    @Bean
     public RouterFunction<ServerResponse> modelsFunction() {
         return RouterFunctions.route(
                 RequestPredicates.GET("/v1/models").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),

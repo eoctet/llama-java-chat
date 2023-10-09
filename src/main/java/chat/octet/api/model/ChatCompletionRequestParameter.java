@@ -14,6 +14,9 @@ import java.util.Map;
 public class ChatCompletionRequestParameter {
 
     //chat completion parameters
+    @JsonProperty("user")
+    private String user;
+
     @JsonProperty("messages")
     private List<ChatMessage> messages;
 
