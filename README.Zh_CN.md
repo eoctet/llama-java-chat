@@ -1,14 +1,19 @@
 # 🤖️ Llama Java Chat
 
-[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) | ☕️ [**Llama-java-core**](https://github.com/eoctet/llama-java-core.git)
+[![README Zh_CN](https://img.shields.io/badge/Lang-中文-red)](./README.Zh_CN.md)
+[![README English](https://img.shields.io/badge/Lang-English-blue)](./README.md)
+[![Llama java core](https://img.shields.io/badge/Github-llama_java_core-green)](https://github.com/eoctet/llama-java-core.git)
+![GitHub language count](https://img.shields.io/github/languages/count/eoctet/llama-java-chat)
+[![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
+
 
 这是一个Llama聊天机器人服务。
 
 #### 主要功能
 
 - [X] 🚀 OpenAPI（部分采样参数已按照Llama2进行调整）
-- [X] 🚀 对话历史记忆
-- [X] 🚀 Web UI [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
+- [X] 🚀 连续生成和对话
+- [X] 🚀 Web UI，例如 [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 服务端部署
 - [X] 🚀 命令行交互
 
@@ -176,6 +181,3 @@ cd <YOUR_PATH> & bash app_server.sh start
 
 - 如果你有任何疑问，欢迎在GitHub Issue中提交。
 
-----
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)

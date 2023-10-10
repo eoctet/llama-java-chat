@@ -1,14 +1,19 @@
 # 🤖️ Llama Java Chat
 
-[**🇨🇳中文**](./README.Zh_CN.md) | [**🌐English**](./README.md) | ☕️ [**Llama-java-core**](https://github.com/eoctet/llama-java-core.git)
+[![README Zh_CN](https://img.shields.io/badge/Lang-中文-red)](./README.Zh_CN.md)
+[![README English](https://img.shields.io/badge/Lang-English-blue)](./README.md)
+[![Llama java core](https://img.shields.io/badge/Github-llama_java_core-green)](https://github.com/eoctet/llama-java-core.git)
+![GitHub language count](https://img.shields.io/github/languages/count/eoctet/llama-java-chat)
+[![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
+
 
 This is a Llama chat robot service.
 
 #### Main content
 
 - [X] 🚀 OpenAPI (Some sampling parameters are adjusted to Llama2)
-- [X] 🚀 Conversation memory
-- [X] 🚀 Web UI [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
+- [X] 🚀 Continuous generation and chat
+- [X] 🚀 Web UI, Like [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 Cloud deployment
 - [X] 🚀 CLI interaction
 
@@ -176,6 +181,3 @@ cd <YOUR_PATH> & bash app_server.sh start
 
 - If you have any questions, please submit them in GitHub Issue.
 
-----
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
