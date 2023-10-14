@@ -27,21 +27,25 @@ jobs:
         env:
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          mkdir -p llama-java-chat-console/conf
-          cp target/*.jar llama-java-chat-console
-          cp conf/setting.default.json llama-java-chat-console/conf
-          zip -r llama-java-chat-console-$TAG_NAME.zip llama-java-chat-console
+          mkdir -p chat-console/conf
+          mv target/*.jar chat-console/chat-console.jar
+          cp conf/setting.default.json chat-console/conf
+          zip -r chat-console-$TAG_NAME.zip chat-console
+
+      - name: Build server app
+        id: build_server_app
+        run: mvn clean package -P server
 
       - name: Make server package
         id: make_server_package
         env:
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          mkdir -p llama-java-chat-server/conf
-          cp target/*.jar llama-java-chat-server
-          cp conf/setting.default.json llama-java-chat-server/conf
-          cp app_server.sh llama-java-chat-server
-          zip -r llama-java-chat-server-$TAG_NAME.zip llama-java-chat-server
+          mkdir -p chat-server/conf
+          mv target/*.jar chat-server/chat-server.jar
+          cp conf/setting.default.json chat-server/conf
+          cp app_server.sh chat-server
+          zip -r chat-server-$TAG_NAME.zip chat-server
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -50,5 +54,5 @@ jobs:
           body_path: CHANGELOG
           token: ${{ secrets.DEV_TOKEN }}
           files: |
-            llama-java-chat-console-${{ github.ref_name }}.zip
-            llama-java-chat-server-${{ github.ref_name }}.zip
+            chat-console-${{ github.ref_name }}.zip
+            chat-server-${{ github.ref_name }}.zip
