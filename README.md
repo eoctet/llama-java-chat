@@ -137,40 +137,6 @@ usage: LLAMA-JAVA-CHAT v1.1.0
     --verbose-prompt            Print the prompt before generating text.
 ```
 
-## Deployment
-
-- 💻 Maven build
-
-```bash
-git clone https://github.com/eoctet/llama-java-chat.git
-
-# Maven build
-cd llama-java-chat
-
-# Build app type: server / console
-bash maven_build.sh server
-```
-
-- 🚀 Install & Starting your server
-
-```bash
-# Default URL: http://YOUR_IP_ADDR:8152/
-
-cd <YOUR_PATH> & bash app_server.sh start
-```
-
-- ⚙️ Directory
-
-```text
-=> llama-java-chat
-   ⌊___ llama-java-chat-server-1.1.0.jar
-   ⌊___ app_server.sh
-   ⌊___ conf
-        ⌊___ setting.json
-
-···
-```
-
 
 > ⚠️ __ATTENTIONS__
 >
