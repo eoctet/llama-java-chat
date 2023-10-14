@@ -7,11 +7,11 @@
 [![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
 
 
-This is a Llama chat robot service.
+This is a 🦙 `Llama chat robot service`. You can use it to deploy your own private services, support `Llama2` series models and other open source models.
 
-#### Main content
+#### Features
 
-- [X] 🚀 OpenAPI (Some sampling parameters are adjusted to Llama2)
+- [X] 🚀 `OpenAPI` (Some inference parameters are adjusted to Llama2)
 - [X] 🚀 Continuous generation and chat
 - [X] 🚀 Web UI, Like [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 Cloud deployment
@@ -21,13 +21,33 @@ This is a Llama chat robot service.
 ## Quick start
 
 
-#### Web & App
+#### 🖥 Cloud deployment
 
-Following the interface specifications of ChatGPT, only the main interfaces are implemented, It can be integrated with [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web), WebUI, and App for use.
+- Download & Starting server
+
+```bash
+# Default URL: http://YOUR_IP_ADDR:8152/
+
+cd <YOUR_PATH>/chat-server & bash app_server.sh start
+```
+
+- Directory
+
+```text
+=> chat-server
+   ⌊___ chat-server.jar
+   ⌊___ app_server.sh
+   ⌊___ conf
+        ⌊___ setting.json
+
+···
+```
+
+Following the interface specifications of `ChatGPT`, only the main interfaces are implemented, It can be integrated with [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web), WebUI, and App for use.
 
 > ℹ️ __Differences__
 > 1. Added parameters for the Llama series model and removed unsupported GPT parameters;
-> 2. By default, the Llama2 chat prompt template is used. If you need to adapt to other models, you can adjust it yourself;
+> 2. By default, the `Llama2-chat` prompt template is used. If you need to adapt to other models, you can adjust it yourself;
 > 3. There are no unnecessary functions such as requesting authentication and usage queries;
 > 4. Optimize the conversation and chat API, without the need to pass on historical conversation context, only the current conversation content is sufficient.
 >
@@ -37,7 +57,7 @@ Following the interface specifications of ChatGPT, only the main interfaces are 
 
 For example
 
-> POST **/v1/chat/completions**
+> `POST` **/v1/chat/completions**
 
 ```shell
 curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
@@ -79,12 +99,12 @@ The API will return data in a stream format:
 }
 ```
 
-#### CLI interaction
+#### 🤖 CLI interaction
 
 Run command line interaction and specify the language model that needs to be loaded.
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_PROMPT'
+java -jar chat-console.jar --model llama2-chat --system 'YOUR_PROMPT'
 ```
 
 ```txt
@@ -98,7 +118,7 @@ However, I am a virtual assistant designed to provide assistance and answer ques
 > Use `help` to view more generate parameters, for example:
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --help
+java -jar chat-console.jar --help
 
 usage: LLAMA-JAVA-CHAT v1.1.0
  -c,--completions               Use completions mode.
@@ -136,6 +156,20 @@ usage: LLAMA-JAVA-CHAT v1.1.0
                                 parameter p (default: 1.0, 1.0 =
                                 disabled).
     --verbose-prompt            Print the prompt before generating text.
+```
+
+#### ⚙️ Build (optional)
+
+Build with `Maven`:
+
+```bash
+git clone https://github.com/eoctet/llama-java-chat.git
+
+# Maven build
+cd llama-java-chat
+
+# Build app type: server / console
+bash maven_build.sh server
 ```
 
 

@@ -7,11 +7,11 @@
 [![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
 
 
-这是一个Llama聊天机器人服务。
+这是一个 🦙 `Llama聊天机器人服务`。你可以用它部署自己的私有服务，支持 `Llama2` 系列模型及其他开源模型。
 
-#### 主要功能
+#### 主要特点
 
-- [X] 🚀 OpenAPI（部分采样参数已按照Llama2进行调整）
+- [X] 🚀 `OpenAPI`（部分推理参数已按照Llama2进行调整）
 - [X] 🚀 连续生成和对话
 - [X] 🚀 Web UI，例如 [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web)
 - [X] 🚀 服务端部署
@@ -21,13 +21,33 @@
 ## 快速开始
 
 
-#### Web & App
+#### 🖥 服务端部署
 
-与ChatGPT的接口规范保持一致，仅实现主要的接口，可以与 [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web) 等WebUI、App集成使用。
+- 下载并启动服务
+
+```bash
+# Default URL: http://YOUR_IP_ADDR:8152/
+
+cd <YOUR_PATH>/chat-server & bash app_server.sh start
+```
+
+- 目录示例
+
+```text
+=> chat-server
+   ⌊___ chat-server.jar
+   ⌊___ app_server.sh
+   ⌊___ conf
+        ⌊___ setting.json
+
+···
+```
+
+与 `ChatGPT` 的接口规范保持一致，仅实现主要的接口，可以与 [`ChatGPT Next Web`](https://github.com/Yidadaa/ChatGPT-Next-Web) 等WebUI、App集成使用。
 
 > ℹ️ __其中不同之处__
 > 1. 新增了Llama系列模型的参数，删除了不支持的GPT参数；
-> 2. 默认使用了Llama2-chat提示词模版，如需适配其他模型，可自行调整；
+> 2. 默认使用了 `Llama2-chat` 提示词模版，如需适配其他模型，可自行调整；
 > 3. 没有请求认证、使用量查询等不需要的功能；
 > 4. 优化对话聊天接口，不需要传递历史对话上下文，仅当前对话内容即可。
 >
@@ -37,7 +57,7 @@
 
 举个栗子
 
-> POST **/v1/chat/completions**
+> `POST` **/v1/chat/completions**
 
 ```shell
 curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
@@ -79,12 +99,12 @@ curl --location 'http://127.0.0.1:8152/v1/chat/completions' \
 }
 ```
 
-#### 命令行交互
+#### 🤖 命令行交互
 
 运行命令行交互，指定需要加载的语言模型。
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --model llama2-chat --system 'YOUR_PROMPT'
+java -jar chat-console.jar --model llama2-chat --system 'YOUR_PROMPT'
 ```
 
 ```txt
@@ -98,7 +118,7 @@ AI: 作为一个 AI，我不知道我是谁。我的设计者和创建者创造�
 > 使用 `help` 查看更多参数，示例如下：
 
 ```bash
-java -jar llama-java-chat-console-1.1.0.jar --help
+java -jar chat-console.jar --help
 
 usage: LLAMA-JAVA-CHAT v1.1.0
  -c,--completions               Use completions mode.
@@ -136,6 +156,20 @@ usage: LLAMA-JAVA-CHAT v1.1.0
                                 parameter p (default: 1.0, 1.0 =
                                 disabled).
     --verbose-prompt            Print the prompt before generating text.
+```
+
+#### ⚙️ 编译（可选）
+
+使用 `Maven` 编译：
+
+```bash
+git clone https://github.com/eoctet/llama-java-chat.git
+
+# Maven build
+cd llama-java-chat
+
+# Build app type: server / console
+bash maven_build.sh server
 ```
 
 
