@@ -1,7 +1,6 @@
 # 🤖️ Llama Java Chat
 
 [![README Zh_CN](https://img.shields.io/badge/Lang-中文-red)](./README.Zh_CN.md)
-[![README English](https://img.shields.io/badge/Lang-English-blue)](./README.md)
 [![Llama java core](https://img.shields.io/badge/Github-llama_java_core-green)](https://github.com/eoctet/llama-java-core.git)
 ![GitHub language count](https://img.shields.io/github/languages/count/eoctet/llama-java-chat)
 [![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
