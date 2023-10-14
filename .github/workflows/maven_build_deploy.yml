@@ -1,0 +1,54 @@
+name: CI
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  maven-build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '18'
+          distribution: 'oracle'
+          architecture: 'x64'
+          cache: 'maven'
+
+      - name: Build console app
+        id: build_console_app
+        run: mvn clean package -P console
+
+      - name: Make console package
+        id: make_console_package
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          mkdir -p llama-java-chat-console/conf
+          cp target/*.jar llama-java-chat-console
+          cp conf/setting.default.json llama-java-chat-console/conf
+          zip -r llama-java-chat-console-$TAG_NAME.zip llama-java-chat-console
+
+      - name: Make server package
+        id: make_server_package
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          mkdir -p llama-java-chat-server/conf
+          cp target/*.jar llama-java-chat-server
+          cp conf/setting.default.json llama-java-chat-server/conf
+          cp app_server.sh llama-java-chat-server
+          zip -r llama-java-chat-server-$TAG_NAME.zip llama-java-chat-server
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: CHANGELOG
+          token: ${{ secrets.DEV_TOKEN }}
+          files: |
+            llama-java-chat-console-${{ github.ref_name }}.zip
+            llama-java-chat-server-${{ github.ref_name }}.zip
