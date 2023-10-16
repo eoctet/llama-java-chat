@@ -1,6 +1,7 @@
 [
   {
     "modelPath": "/models/ggml-model-7b_m-q6_k.gguf",
+    "modelType": "Llama2",
     "modelName": "Llama2",
     "contextSize": 512,
     "mainGpu": null,
