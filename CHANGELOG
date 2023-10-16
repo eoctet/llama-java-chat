@@ -1,6 +1,1 @@
-1. Update `llama-java-core` version to v1.1.8.
-    * Fix some issues.
-    * Update llama.cpp API.
-2. Update continuous generation and chat.
-3. Update setting.default.json.
-4. Update console app & parameters.
+1. Add model prompt templates.
