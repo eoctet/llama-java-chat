@@ -87,7 +87,7 @@ public class ChatCompletionService {
         return RouterFunctions.route(
                 RequestPredicates.POST("/v1/tokenize").and(RequestPredicates.accept(MediaType.APPLICATION_JSON)),
                 serverRequest -> serverRequest.bodyToMono(String.class).flatMap(content -> {
-                    int[] tokens = LlamaService.tokenize(content, false);
+                    int[] tokens = LlamaService.tokenize(content, false, true);
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(tokens));
                 })
         );
@@ -114,9 +114,7 @@ public class ChatCompletionService {
                     if (!model.getModelParams().isEmbedding()) {
                         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue("Llama model must be created with embedding=True to call this method"));
                     }
-                    //TODO fix here
-                    //float[] embedding = LlamaService.embedding(content);
-                    float[] embedding = LlamaService.getEmbeddings();
+                    float[] embedding = LlamaService.getEmbedding();
                     return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(embedding));
                 })
         );
