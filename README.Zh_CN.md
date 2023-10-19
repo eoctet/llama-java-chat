@@ -1,9 +1,8 @@
 # 🤖️ Llama Java Chat
 
 [![CI](https://github.com/eoctet/llama-java-chat/actions/workflows/maven_build_deploy.yml/badge.svg)](https://github.com/eoctet/llama-java-chat/actions/workflows/maven_build_deploy.yml)
-[![README English](https://img.shields.io/badge/Lang-English-blue)](./README.md)
-[![Llama java core](https://img.shields.io/badge/Github-llama_java_core-green)](https://github.com/eoctet/llama-java-core.git)
-![GitHub language count](https://img.shields.io/github/languages/count/eoctet/llama-java-chat)
+[![README English](https://img.shields.io/badge/Lang-English-red)](./README.md)
+[![Llama java core](https://img.shields.io/badge/Github-Llama_Java_Core-blue?logo=github)](https://github.com/eoctet/llama-java-core.git)
 [![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
 
 

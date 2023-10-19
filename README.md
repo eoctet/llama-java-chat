@@ -2,8 +2,7 @@
 
 [![CI](https://github.com/eoctet/llama-java-chat/actions/workflows/maven_build_deploy.yml/badge.svg)](https://github.com/eoctet/llama-java-chat/actions/workflows/maven_build_deploy.yml)
 [![README Zh_CN](https://img.shields.io/badge/Lang-中文-red)](./README.Zh_CN.md)
-[![Llama java core](https://img.shields.io/badge/Github-llama_java_core-green)](https://github.com/eoctet/llama-java-core.git)
-![GitHub language count](https://img.shields.io/github/languages/count/eoctet/llama-java-chat)
+[![Llama java core](https://img.shields.io/badge/Github-Llama_Java_Core-blue?logo=github)](https://github.com/eoctet/llama-java-core.git)
 [![GitHub](https://img.shields.io/github/license/eoctet/llama-java-core)](https://opensource.org/licenses/MIT)
 
 
