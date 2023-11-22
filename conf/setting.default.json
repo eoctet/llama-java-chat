@@ -26,6 +26,12 @@
     "gqa": null,
     "rmsNormEps": null,
     "mulMatQ": true,
-    "verbose": false
+    "verbose": false,
+    "ropeScalingType": -1,
+    "yarnExtFactor": -1.0,
+    "yarnAttnFactor": 1.0,
+    "yarnBetaFast": 32.0,
+    "yarnBetaSlow": 1.0,
+    "yarnOrigCtx": 0
   }
 ]

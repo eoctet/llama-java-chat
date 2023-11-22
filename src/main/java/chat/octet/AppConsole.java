@@ -28,6 +28,7 @@ public class AppConsole {
         OPTIONS.addOption(null, "presence-penalty", true, "Repeat alpha presence penalty (default: 0.0, 0.0 = disabled)");
         OPTIONS.addOption(null, "top-k", true, "Top-k sampling (default: 40, 0 = disabled).");
         OPTIONS.addOption(null, "top-p", true, "Top-p sampling (default: 0.9).");
+        OPTIONS.addOption(null, "min-p", true, "Min-p sampling (default: 0.05, 0 = disabled).");
         OPTIONS.addOption(null, "tfs", true, "Enable tail free sampling with parameter z (default: 1.0, 1.0 = disabled).");
         OPTIONS.addOption(null, "typical", true, "Enable typical sampling sampling with parameter p (default: 1.0, 1.0 = disabled).");
         OPTIONS.addOption(null, "mirostat", true, "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0).");
@@ -56,6 +57,7 @@ public class AppConsole {
                 .presencePenalty(Float.parseFloat(cmd.getOptionValue("presence-penalty", String.valueOf(DEFAULT_PARAMETER.getPresencePenalty()))))
                 .topK(Integer.parseInt(cmd.getOptionValue("top-k", String.valueOf(DEFAULT_PARAMETER.getTopK()))))
                 .topP(Float.parseFloat(cmd.getOptionValue("top-p", String.valueOf(DEFAULT_PARAMETER.getTopP()))))
+                .minP(Float.parseFloat(cmd.getOptionValue("min-p", String.valueOf(DEFAULT_PARAMETER.getMinP()))))
                 .tsf(Float.parseFloat(cmd.getOptionValue("tfs", String.valueOf(DEFAULT_PARAMETER.getTsf()))))
                 .typical(Float.parseFloat(cmd.getOptionValue("typical", String.valueOf(DEFAULT_PARAMETER.getTypical()))))
                 .mirostatMode(mirostatMode)
@@ -72,7 +74,7 @@ public class AppConsole {
 
         if (cmd.hasOption("h") || cmd.hasOption("help")) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("LLAMA-JAVA-CHAT v1.1.0", OPTIONS);
+            formatter.printHelp("LLAMA-JAVA-CHAT v1.1.4", OPTIONS);
             System.exit(0);
         }
 

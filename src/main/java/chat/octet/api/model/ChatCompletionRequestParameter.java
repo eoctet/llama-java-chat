@@ -34,6 +34,9 @@ public class ChatCompletionRequestParameter {
     @JsonProperty("top_p")
     private Float topP;
 
+    @JsonProperty("min_p")
+    private Float minP;
+
     @JsonProperty("tfs_z")
     private Float tfs;
 

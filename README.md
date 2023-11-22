@@ -119,7 +119,7 @@ However, I am a virtual assistant designed to provide assistance and answer ques
 ```bash
 java -jar chat-console.jar --help
 
-usage: LLAMA-JAVA-CHAT v1.1.0
+usage: LLAMA-JAVA-CHAT v1.1.4
  -c,--completions               Use completions mode.
     --frequency-penalty <arg>   Repeat alpha frequency penalty (default:
                                 0.0, 0.0 = disabled)
@@ -151,6 +151,7 @@ usage: LLAMA-JAVA-CHAT v1.1.0
     --top-k <arg>               Top-k sampling (default: 40, 0 =
                                 disabled).
     --top-p <arg>               Top-p sampling (default: 0.9).
+    --min-p <arg>               Min-p sampling (default: 0.05, 0 = disabled).
     --typical <arg>             Enable typical sampling sampling with
                                 parameter p (default: 1.0, 1.0 =
                                 disabled).

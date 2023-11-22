@@ -160,6 +160,7 @@ public class ChatCompletionService {
                 .temperature(Optional.ofNullable(params.getTemperature()).orElse(DEFAULT_PARAMETER.getTemperature()))
                 .topK(Optional.ofNullable(params.getTopK()).orElse(DEFAULT_PARAMETER.getTopK()))
                 .topP(Optional.ofNullable(params.getTopP()).orElse(DEFAULT_PARAMETER.getTopP()))
+                .minP(Optional.ofNullable(params.getMinP()).orElse(DEFAULT_PARAMETER.getMinP()))
                 .tsf(Optional.ofNullable(params.getTfs()).orElse(DEFAULT_PARAMETER.getTsf()))
                 .typical(Optional.ofNullable(params.getTypical()).orElse(DEFAULT_PARAMETER.getTypical()))
                 .maxNewTokenSize(Optional.ofNullable(params.getMaxNewTokensSize()).orElse(DEFAULT_PARAMETER.getMaxNewTokenSize()))
